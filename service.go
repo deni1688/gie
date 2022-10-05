@@ -6,10 +6,10 @@ import (
 )
 
 type service struct {
-	provider GitProvider
+	provider Provider
 }
 
-func NewService(provider GitProvider) Service {
+func NewService(provider Provider) Service {
 	return &service{
 		provider: provider,
 	}

@@ -4,7 +4,7 @@ type gitlabProvider struct {
 	Token string
 }
 
-func NewGitlabProvider(token string) GitProvider {
+func NewGitlabProvider(token string) Provider {
 	return &gitlabProvider{
 		Token: token,
 	}

@@ -37,8 +37,7 @@ func (r *Cli) Run() error {
 	}
 
 	var repoIndex string
-	fmt.Printf("Select a repo to create issues (0-%d): ", len(*repos)-1)
-
+	fmt.Printf("Select a repo to create issues in (0-%d): ", len(*repos)-1)
 	if _, err := fmt.Scanln(&repoIndex); err != nil {
 		return err
 	}

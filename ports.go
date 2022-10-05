@@ -1,6 +1,6 @@
 package main
 
-type GitProvider interface {
+type Provider interface {
 	GetRepos() (*[]Repo, error)
 	CreateIssue(repo Repo, issue Issue) error
 }
