@@ -1,15 +1,10 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
-
 type gitlabProvider struct {
 	Token string
 }
 
-func NewGitlabProvider(token string) GitProvider {
+func NewGitlabProvider(token string) Provider {
 	return &gitlabProvider{
 		Token: token,
 	}
@@ -35,8 +30,5 @@ func (r *gitlabProvider) CreateIssues(repo Repo, issues []Issue) error {
 }
 
 func (r *gitlabProvider) CreateIssue(repo Repo, issue Issue) error {
-	fmt.Println("Creating issue: ", issue)
-	time.Sleep(1 * time.Second)
-	fmt.Println("Issue created: ", issue)
 	return nil
 }
