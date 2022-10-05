@@ -8,6 +8,6 @@ type Repo struct {
 type Issue struct {
 	Title     string `json:"title"`
 	Desc      string `json:"desc"`
-	Weight    int    `json:"weight"`
+	Weight    string `json:"weight"`
 	Milestone string `json:"milestone"`
 }
