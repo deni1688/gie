@@ -57,20 +57,10 @@ func (r *Cli) issuesFromArgs(args []string) ([]Issue, error) {
 
 	for _, arg := range args {
 		switch {
-		case strings.HasPrefix(arg, "t:"):
-			issue.Title = strings.TrimPrefix(arg, "t:")
-		case strings.HasPrefix(arg, "d:"):
-			issue.Desc = strings.TrimPrefix(arg, "d:")
-		case strings.HasPrefix(arg, "w:"):
-			weight, err := strconv.Atoi(strings.TrimPrefix(arg, "w:"))
-			if err != nil {
-				fmt.Println("Weight must be an integer")
-				return nil, err
-			}
-
-			issue.Weight = weight
-		case strings.HasPrefix(arg, "-m="):
-			issue.Milestone = strings.TrimPrefix(arg, "-m=")
+		case setFromArgWithPrefix(arg, "t:", &issue.Title):
+		case setFromArgWithPrefix(arg, "d:", &issue.Desc):
+		case setFromArgWithPrefix(arg, "w:", &issue.Weight):
+		case setFromArgWithPrefix(arg, "m:", &issue.Milestone):
 		case arg == "--":
 			issues = append(issues, issue)
 			issue = r.service.DefaultIssue()
@@ -78,5 +68,15 @@ func (r *Cli) issuesFromArgs(args []string) ([]Issue, error) {
 			return nil, errors.New("invalid argument: " + arg)
 		}
 	}
+
 	return issues, nil
+}
+
+func setFromArgWithPrefix(arg, prefix string, value *string) bool {
+	if strings.HasPrefix(arg, prefix) {
+		*value = strings.TrimPrefix(arg, prefix)
+		return true
+	}
+
+	return false
 }

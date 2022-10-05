@@ -19,7 +19,7 @@ func (r *service) DefaultIssue() Issue {
 	return Issue{
 		Title:     "Default title",
 		Desc:      "Default description",
-		Weight:    15,
+		Weight:    "15",
 		Milestone: "",
 	}
 }
