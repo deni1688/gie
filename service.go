@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"time"
 )
 
 type service struct {
@@ -16,64 +15,29 @@ func NewService(provider GitProvider) Service {
 	}
 }
 
-func (r *service) ParseArgs(args []string) ([]Issue, error) {
-	issues := []Issue{}
-	issue := getDefaultIssue()
+func (r *service) DefaultIssue() Issue {
+	return Issue{
+		Title:     "Default title",
+		Desc:      "Default description",
+		Weight:    15,
+		Milestone: "",
+	}
+}
 
-	for _, arg := range args {
-		switch {
-		case strings.HasPrefix(arg, "-t="):
-			issue.Title = strings.TrimPrefix(arg, "-t=")
-		case strings.HasPrefix(arg, "-d="):
-			issue.Desc = strings.TrimPrefix(arg, "-d=")
-		case strings.HasPrefix(arg, "-w="):
-			weight, err := strconv.Atoi(strings.TrimPrefix(arg, "-w="))
-			if err != nil {
-				fmt.Println("Weight must be an integer")
-				return nil, err
-			}
+func (r *service) ListRepos() (*[]Repo, error) {
+	return r.provider.GetRepos()
+}
 
-			issue.Weight = weight
-		case strings.HasPrefix(arg, "-m="):
-			issue.Milestone = strings.TrimPrefix(arg, "-m=")
-		case arg == "--":
-			issues = append(issues, issue)
-			issue = getDefaultIssue()
-		default:
-			fmt.Println("Invalid argument: ", arg)
+func (r *service) SubmitIssues(repo Repo, issues *[]Issue) error {
+	fmt.Printf("Submitting %d issues to repo: %s\n\n", len(*issues), repo.Name)
+	for _, issue := range *issues {
+		fmt.Println("Creating issue: ", issue.Title)
+		time.Sleep(1 * time.Second)
+		err := r.provider.CreateIssue(repo, issue)
+		if err != nil {
+			return err
 		}
 	}
 
-	return issues, nil
-}
-
-func (r *service) Execute(issues []Issue) error {
-	repos, err := r.provider.GetRepos()
-	for i, repo := range *repos {
-		fmt.Printf("%d: %s\n", i, repo.Name)
-	}
-
-	var repoIndex string
-	fmt.Print("Select a repo to create issues in: ")
-	fmt.Scanln(&repoIndex)
-
-	index, err := strconv.Atoi(repoIndex)
-	if err != nil || index < 0 || index >= len(*repos) {
-		return fmt.Errorf("Invalid repo index: %s", repoIndex)
-	}
-
-	repo := (*repos)[index]
-	fmt.Println("Creating issues in repo: ", repo.Name)
-	fmt.Println(issues)
-
-	return r.provider.CreateIssues(repo, issues)
-}
-
-func getDefaultIssue() Issue {
-	return Issue{
-		Title:     "Default title",
-		Desc:      "Default desc",
-		Weight:    10,
-		Milestone: "Default milestone",
-	}
+	return nil
 }
