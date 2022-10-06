@@ -57,10 +57,10 @@ func (r *Cli) issuesFromArgs(args []string) ([]Issue, error) {
 
 	for _, arg := range args {
 		switch {
-		case setFromArgWithPrefix(arg, "t:", &issue.Title):
-		case setFromArgWithPrefix(arg, "d:", &issue.Desc):
-		case setFromArgWithPrefix(arg, "w:", &issue.Weight):
-		case setFromArgWithPrefix(arg, "m:", &issue.Milestone):
+		case setFrom(arg, "t:", &issue.Title):
+		case setFrom(arg, "d:", &issue.Desc):
+		case setFrom(arg, "w:", &issue.Weight):
+		case setFrom(arg, "m:", &issue.Milestone):
 		case arg == "--":
 			issues = append(issues, issue)
 			issue = r.service.DefaultIssue()
@@ -72,7 +72,7 @@ func (r *Cli) issuesFromArgs(args []string) ([]Issue, error) {
 	return issues, nil
 }
 
-func setFromArgWithPrefix(arg, prefix string, value *string) bool {
+func setFrom(arg, prefix string, value *string) bool {
 	if strings.HasPrefix(arg, prefix) {
 		*value = strings.TrimPrefix(arg, prefix)
 		return true
