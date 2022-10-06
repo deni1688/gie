@@ -7,6 +7,5 @@ type Provider interface {
 
 type Service interface {
 	ListRepos() (*[]Repo, error)
-	DefaultIssue() Issue
 	SubmitIssues(Repo, *[]Issue) error
 }

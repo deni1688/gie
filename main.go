@@ -22,7 +22,7 @@ func (r config) Get(key string) string {
 func main() {
 	c, err := loadConfig()
 	if err != nil {
-		fmt.Println("Unabled to read the config file at $HOME/.config/gitissue.json")
+		fmt.Println("Unable to read the config file at $HOME/.config/gitissue.json")
 		os.Exit(1)
 	}
 
@@ -43,7 +43,7 @@ func main() {
 	}
 
 	s := domain.NewService(p)
-	cli := infra.NewCli(s)
+	cli := infra.NewCli(c.Get("prefix"), s)
 	if err := cli.Run(); err != nil {
 		fmt.Println("Error running cli:", err)
 		os.Exit(1)

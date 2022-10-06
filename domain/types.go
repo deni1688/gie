@@ -6,15 +6,11 @@ type Repo struct {
 }
 
 type Issue struct {
-	Title     string `json:"title"`
-	Desc      string `json:"desc"`
-	Weight    string `json:"weight"`
-	Milestone string `json:"milestone"`
+	Title string `json:"title"`
+	Desc  string `json:"desc"`
 }
 
 func (r *Issue) Reset() {
 	r.Title = ""
 	r.Desc = ""
-	r.Weight = ""
-	r.Milestone = ""
 }

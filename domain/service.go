@@ -10,18 +10,7 @@ type service struct {
 }
 
 func NewService(provider Provider) Service {
-	return &service{
-		provider: provider,
-	}
-}
-
-func (r service) DefaultIssue() Issue {
-	return Issue{
-		Title:     "Default title",
-		Desc:      "Default description",
-		Weight:    "15",
-		Milestone: "",
-	}
+	return &service{provider: provider}
 }
 
 func (r service) ListRepos() (*[]Repo, error) {
