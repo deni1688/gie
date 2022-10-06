@@ -1,6 +1,7 @@
-package main
+package infra
 
 import (
+	"deni1688/gitissue/domain"
 	"errors"
 	"fmt"
 	"os"
@@ -9,10 +10,10 @@ import (
 )
 
 type Cli struct {
-	service Service
+	service domain.Service
 }
 
-func NewCli(service Service) *Cli {
+func NewCli(service domain.Service) *Cli {
 	return &Cli{service}
 }
 
@@ -51,8 +52,8 @@ func (r *Cli) Run() error {
 	return r.service.SubmitIssues(repo, &issues)
 }
 
-func (r *Cli) issuesFromArgs(args []string) ([]Issue, error) {
-	var issues []Issue
+func (r *Cli) issuesFromArgs(args []string) ([]domain.Issue, error) {
+	var issues []domain.Issue
 	issue := r.service.DefaultIssue()
 
 	for _, arg := range args {
