@@ -3,21 +3,9 @@ package main
 import (
 	"deni1688/gitissue/domain"
 	"deni1688/gitissue/infra"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 )
-
-type config map[string]string
-
-func (r config) Get(key string) string {
-	if val, ok := r[key]; ok {
-		return val
-	}
-
-	return ""
-}
 
 func main() {
 	c, err := loadConfig()
@@ -35,8 +23,11 @@ func main() {
 			c.Get("query"),
 		)
 	case "github":
-		fmt.Println("Provider not implemented yet")
-		os.Exit(1)
+		p = infra.NewGithubProvider(
+			c.Get("token"),
+			c.Get("host"),
+			c.Get("query"),
+		)
 	default:
 		fmt.Println("Invalid provider", c.Get("provider"))
 		os.Exit(1)
@@ -50,19 +41,4 @@ func main() {
 	}
 
 	fmt.Println("Done!")
-}
-
-func loadConfig() (config, error) {
-	file, err := os.Open(os.Getenv("HOME") + "/.config/gitissue.json")
-	if err != nil {
-		return nil, err
-	}
-
-	var c config
-	err = json.NewDecoder(file).Decode(&c)
-	if errors.Is(err, &os.PathError{}) {
-		return nil, err
-	}
-
-	return c, nil
 }
