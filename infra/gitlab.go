@@ -7,30 +7,24 @@ import (
 )
 
 type gitlabProvider struct {
-	token  string
-	host   string
-	client *http.Client
+	token         string
+	reposEndpoint string
+	query         string
+	client        *http.Client
 }
 
-func NewGitlabProvider(token string, host string) domain.Provider {
-	return &gitlabProvider{token, host, http.DefaultClient}
+func NewGitlabProvider(token string, host string, query string) domain.Provider {
+	return &gitlabProvider{token, host + "/api/v4/projects", query, http.DefaultClient}
 }
 
 func (r gitlabProvider) GetRepos() (*[]domain.Repo, error) {
-	req, err := http.NewRequest(http.MethodGet, r.host+"/api/v4/projects", nil)
+	req, err := http.NewRequest(http.MethodGet, r.reposEndpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("PRIVATE-TOKEN", r.token)
-
-	q := req.URL.Query()
-	q.Add("per_page", "100")
-	q.Add("order_by", "name")
-	q.Add("archived", "false")
-	q.Add("sort", "asc")
-	q.Add("visibility", "private")
-	req.URL.RawQuery = q.Encode()
+	req.URL.RawQuery = r.query
 
 	resp, err := r.client.Do(req)
 	if err != nil {
