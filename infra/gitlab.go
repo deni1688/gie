@@ -21,16 +21,10 @@ func (r *gitlabProvider) GetRepos() (*[]domain.Repo, error) {
 	}, nil
 }
 
-func (r *gitlabProvider) CreateIssues(repo domain.Repo, issues []domain.Issue) error {
-	var err error
-
-	for _, issue := range issues {
-		err = r.CreateIssue(repo, issue)
-	}
-
-	return err
-}
-
 func (r *gitlabProvider) CreateIssue(repo domain.Repo, issue domain.Issue) error {
 	return nil
+}
+
+func (r *gitlabProvider) GetTokenUserId() (string, error) {
+	return "123", nil
 }
