@@ -11,3 +11,10 @@ type Issue struct {
 	Weight    string `json:"weight"`
 	Milestone string `json:"milestone"`
 }
+
+func (r *Issue) Reset() {
+	r.Title = ""
+	r.Desc = ""
+	r.Weight = ""
+	r.Milestone = ""
+}

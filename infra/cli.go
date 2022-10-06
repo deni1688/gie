@@ -26,7 +26,7 @@ func (r *Cli) Run() error {
 		return errors.New(helpError)
 	}
 
-	issues, err := r.issuesFromArgs(args)
+	issues, err := r.parseIssues(args)
 	if err != nil {
 		return err
 	}
@@ -52,19 +52,17 @@ func (r *Cli) Run() error {
 	return r.service.SubmitIssues(repo, &issues)
 }
 
-func (r *Cli) issuesFromArgs(args []string) ([]domain.Issue, error) {
+func (r *Cli) parseIssues(args []string) ([]domain.Issue, error) {
 	var issues []domain.Issue
 	issue := r.service.DefaultIssue()
 
 	for _, arg := range args {
 		switch {
-		case setFrom(arg, "t:", &issue.Title):
-		case setFrom(arg, "d:", &issue.Desc):
-		case setFrom(arg, "w:", &issue.Weight):
-		case setFrom(arg, "m:", &issue.Milestone):
-		case arg == "--":
-			issues = append(issues, issue)
-			issue = r.service.DefaultIssue()
+		case onArg(arg, "t:", &issue.Title):
+		case onArg(arg, "d:", &issue.Desc):
+		case onArg(arg, "w:", &issue.Weight):
+		case onArg(arg, "m:", &issue.Milestone):
+		case onEnd(arg, &issues, &issue):
 		default:
 			return nil, errors.New("invalid argument: " + arg)
 		}
@@ -73,7 +71,15 @@ func (r *Cli) issuesFromArgs(args []string) ([]domain.Issue, error) {
 	return issues, nil
 }
 
-func setFrom(arg, prefix string, value *string) bool {
+func onEnd(arg string, issues *[]domain.Issue, issue *domain.Issue) bool {
+	if arg == "--" {
+		*issues = append(*issues, *issue)
+		issue.Reset()
+	}
+	return false
+}
+
+func onArg(arg, prefix string, value *string) bool {
 	if strings.HasPrefix(arg, prefix) {
 		*value = strings.TrimPrefix(arg, prefix)
 		return true
