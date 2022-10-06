@@ -75,7 +75,9 @@ func onEnd(arg string, issues *[]domain.Issue, issue *domain.Issue) bool {
 	if arg == "--" {
 		*issues = append(*issues, *issue)
 		issue.Reset()
+		return true
 	}
+
 	return false
 }
 

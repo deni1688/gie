@@ -1,22 +1,48 @@
 package infra
 
-import "deni1688/gitissue/domain"
+import (
+	"deni1688/gitissue/domain"
+	"encoding/json"
+	"net/http"
+)
 
 type gitlabProvider struct {
-	token string
+	token  string
+	host   string
+	client *http.Client
 }
 
-func NewGitlabProvider(token string) domain.Provider {
-	return &gitlabProvider{token}
+func NewGitlabProvider(token string, host string) domain.Provider {
+	return &gitlabProvider{token, host, http.DefaultClient}
 }
 
 func (r gitlabProvider) GetRepos() (*[]domain.Repo, error) {
-	return &[]domain.Repo{
-		{Name: "Repo 1", ID: 1},
-		{Name: "Repo 2", ID: 2},
-		{Name: "Repo 3", ID: 3},
-		{Name: "Repo 4", ID: 4},
-	}, nil
+	req, err := http.NewRequest(http.MethodGet, r.host+"/api/v4/projects", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("PRIVATE-TOKEN", r.token)
+
+	q := req.URL.Query()
+	q.Add("per_page", "100")
+	q.Add("order_by", "name")
+	q.Add("archived", "false")
+	q.Add("sort", "asc")
+	q.Add("visibility", "private")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := r.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var repos []domain.Repo
+	if err = json.NewDecoder(resp.Body).Decode(&repos); err != nil {
+		return nil, err
+	}
+
+	return &repos, nil
 }
 
 func (r gitlabProvider) CreateIssue(repo domain.Repo, issue domain.Issue) error {

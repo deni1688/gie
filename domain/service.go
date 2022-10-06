@@ -29,9 +29,8 @@ func (r service) ListRepos() (*[]Repo, error) {
 }
 
 func (r service) SubmitIssues(repo Repo, issues *[]Issue) error {
-	fmt.Printf("Submitting %d issues to repo: %s\n\n", len(*issues), repo.Name)
 	for _, issue := range *issues {
-		fmt.Println("Creating issue: ", issue.Title)
+		fmt.Println(fmt.Sprintf("Creating issue %s in %s", issue.Title, repo.Name))
 		time.Sleep(1 * time.Second)
 		err := r.provider.CreateIssue(repo, issue)
 		if err != nil {
