@@ -3,16 +3,14 @@ package infra
 import "deni1688/gitissue/domain"
 
 type gitlabProvider struct {
-	Token string
+	token string
 }
 
 func NewGitlabProvider(token string) domain.Provider {
-	return &gitlabProvider{
-		Token: token,
-	}
+	return &gitlabProvider{token}
 }
 
-func (r *gitlabProvider) GetRepos() (*[]domain.Repo, error) {
+func (r gitlabProvider) GetRepos() (*[]domain.Repo, error) {
 	return &[]domain.Repo{
 		{Name: "Repo 1", ID: 1},
 		{Name: "Repo 2", ID: 2},
@@ -21,10 +19,10 @@ func (r *gitlabProvider) GetRepos() (*[]domain.Repo, error) {
 	}, nil
 }
 
-func (r *gitlabProvider) CreateIssue(repo domain.Repo, issue domain.Issue) error {
+func (r gitlabProvider) CreateIssue(repo domain.Repo, issue domain.Issue) error {
 	return nil
 }
 
-func (r *gitlabProvider) GetTokenUserId() (string, error) {
+func (r gitlabProvider) GetTokenUserId() (string, error) {
 	return "123", nil
 }

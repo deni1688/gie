@@ -19,7 +19,7 @@ func NewCli(service domain.Service) *Cli {
 
 const helpError = `please provide one or more issues to be created, format: t:"New issue title" d:"This should be fixed" w:30 m:"sprint/45" -- ..."`
 
-func (r *Cli) Run() error {
+func (r Cli) Run() error {
 	args := os.Args[1:]
 
 	if len(args) == 0 {
@@ -52,7 +52,7 @@ func (r *Cli) Run() error {
 	return r.service.SubmitIssues(repo, &issues)
 }
 
-func (r *Cli) parseIssues(args []string) ([]domain.Issue, error) {
+func (r Cli) parseIssues(args []string) ([]domain.Issue, error) {
 	var issues []domain.Issue
 	issue := r.service.DefaultIssue()
 

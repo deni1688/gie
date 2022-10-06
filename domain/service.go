@@ -15,7 +15,7 @@ func NewService(provider Provider) Service {
 	}
 }
 
-func (r *service) DefaultIssue() Issue {
+func (r service) DefaultIssue() Issue {
 	return Issue{
 		Title:     "Default title",
 		Desc:      "Default description",
@@ -24,11 +24,11 @@ func (r *service) DefaultIssue() Issue {
 	}
 }
 
-func (r *service) ListRepos() (*[]Repo, error) {
+func (r service) ListRepos() (*[]Repo, error) {
 	return r.provider.GetRepos()
 }
 
-func (r *service) SubmitIssues(repo Repo, issues *[]Issue) error {
+func (r service) SubmitIssues(repo Repo, issues *[]Issue) error {
 	fmt.Printf("Submitting %d issues to repo: %s\n\n", len(*issues), repo.Name)
 	for _, issue := range *issues {
 		fmt.Println("Creating issue: ", issue.Title)
