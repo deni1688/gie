@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -36,7 +37,7 @@ func (r Cli) Run() error {
 		return err
 	}
 
-	issues, err := r.parseIssues(strings.Split(string(b), "\n"), p)
+	issues, err := r.parseIssues(string(b), p)
 	if err != nil {
 		return err
 	}
@@ -50,18 +51,20 @@ func (r Cli) Run() error {
 }
 
 //ISSUE: #1
-func (r Cli) parseIssues(lines []string, path *string) ([]domain.Issue, error) {
+func (r Cli) parseIssues(content string, path *string) ([]domain.Issue, error) {
 	var issues []domain.Issue
 	issue := domain.Issue{}
+	regx, err := regexp.Compile(r.prefix + "(.*)\n")
+	if err != nil {
+		return nil, err
+	}
 
-	for i, line := range lines {
-		if line == "" {
-			continue
-		}
+	if strings.Contains(content, r.prefix) {
+		issueLines := regx.FindAllString(content, -1)
 
-		if strings.HasPrefix(line, r.prefix) {
-			issue.Title = strings.TrimPrefix(line, r.prefix)
-			issue.Desc = fmt.Sprintf("Extracted from line %d in %s", i, *path)
+		for _, title := range issueLines {
+			issue.Title = strings.TrimPrefix(title, r.prefix)
+			issue.Desc = "Extracted from " + *path
 			issues = append(issues, issue)
 			issue.Reset()
 		}
