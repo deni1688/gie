@@ -49,8 +49,8 @@ func (r gitlabProvider) request(method, resource string) (*http.Request, error) 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("PRIVATE-TOKEN", r.token)
 	req.URL.RawQuery = r.query
-	return req, err
 
+	return req, err
 }
 
 func (r gitlabProvider) endpoint(resource string) string {
