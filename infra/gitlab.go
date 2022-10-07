@@ -13,18 +13,15 @@ type gitlabProvider struct {
 	client *http.Client
 }
 
-func NewGitlabProvider(token string, host string, query string) domain.Provider {
+func NewGitlabProvider(token, host, query string) domain.Provider {
 	return &gitlabProvider{token, host, query, http.DefaultClient}
 }
 
 func (r gitlabProvider) GetRepos() (*[]domain.Repo, error) {
-	req, err := http.NewRequest(http.MethodGet, r.host+"/api/v4/projects", nil)
+	req, err := r.request("GET", "projects")
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("PRIVATE-TOKEN", r.token)
-	req.URL.RawQuery = r.query
 
 	resp, err := r.client.Do(req)
 	if err != nil {
@@ -41,4 +38,21 @@ func (r gitlabProvider) GetRepos() (*[]domain.Repo, error) {
 
 func (r gitlabProvider) CreateIssue(repo domain.Repo, issue domain.Issue) error {
 	return nil
+}
+
+func (r gitlabProvider) request(method, resource string) (*http.Request, error) {
+	req, err := http.NewRequest(method, r.endpoint(resource), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("PRIVATE-TOKEN", r.token)
+	req.URL.RawQuery = r.query
+	return req, err
+
+}
+
+func (r gitlabProvider) endpoint(resource string) string {
+	return r.host + "/api/v4/" + resource
 }
