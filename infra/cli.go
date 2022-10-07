@@ -2,8 +2,10 @@ package infra
 
 import (
 	"deni1688/gitissue/domain"
+	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"strings"
 )
@@ -18,9 +20,9 @@ func NewCli(prefix, path string, service domain.Service) *Cli {
 	return &Cli{prefix, path, service}
 }
 
-//ISSUE: #2
+// Issue: #2
 func (r Cli) Run() error {
-	cmd := exec.Command("git", "remote", "get-url", "origin")
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	origin, err := cmd.Output()
 	if err != nil {
 		return err
@@ -36,6 +38,21 @@ func (r Cli) Run() error {
 		return err
 	}
 
+	repos, err := r.service.ListRepos()
+	if err != nil {
+		return err
+	}
+
+	var currentRepo domain.Repo
+	for _, repo := range *repos {
+		if strings.Contains(path.Base(string(origin)), repo.Name) {
+			fmt.Println("Found repo: ", repo)
+			currentRepo = repo
+			break
+		}
+	}
+	fmt.Println(currentRepo)
+
 	err = r.service.SubmitIssues(domain.Repo{Name: string(origin)}, &issues)
 	if err != nil {
 		return err
@@ -44,7 +61,7 @@ func (r Cli) Run() error {
 	return nil
 }
 
-//ISSUE: #1
+// Issue: #1
 func (r Cli) parseIssues(content string) ([]domain.Issue, error) {
 	var issues []domain.Issue
 	issue := domain.Issue{}
