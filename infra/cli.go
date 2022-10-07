@@ -2,8 +2,6 @@ package infra
 
 import (
 	"deni1688/gitissue/domain"
-	"flag"
-	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
@@ -12,32 +10,28 @@ import (
 
 type Cli struct {
 	prefix  string
+	path    string
 	service domain.Service
 }
 
-func NewCli(prefix string, service domain.Service) *Cli {
-	return &Cli{prefix, service}
+func NewCli(prefix, path string, service domain.Service) *Cli {
+	return &Cli{prefix, path, service}
 }
 
 //ISSUE: #2
 func (r Cli) Run() error {
-	p := flag.String("path", "./issues.txt", "please provide file path to parse issues from")
-	flag.Parse()
-
-	fmt.Println(*p)
-
 	cmd := exec.Command("git", "remote", "get-url", "origin")
 	origin, err := cmd.Output()
 	if err != nil {
 		return err
 	}
 
-	b, err := os.ReadFile(*p)
+	b, err := os.ReadFile(r.path)
 	if err != nil {
 		return err
 	}
 
-	issues, err := r.parseIssues(string(b), p)
+	issues, err := r.parseIssues(string(b))
 	if err != nil {
 		return err
 	}
@@ -51,7 +45,7 @@ func (r Cli) Run() error {
 }
 
 //ISSUE: #1
-func (r Cli) parseIssues(content string, path *string) ([]domain.Issue, error) {
+func (r Cli) parseIssues(content string) ([]domain.Issue, error) {
 	var issues []domain.Issue
 	issue := domain.Issue{}
 	regx, err := regexp.Compile(r.prefix + "(.*)\n")
@@ -64,7 +58,7 @@ func (r Cli) parseIssues(content string, path *string) ([]domain.Issue, error) {
 
 		for _, title := range issueLines {
 			issue.Title = strings.TrimPrefix(title, r.prefix)
-			issue.Desc = "Extracted from " + *path
+			issue.Desc = "Extracted from " + r.path
 			issues = append(issues, issue)
 			issue.Reset()
 		}
