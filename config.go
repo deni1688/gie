@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -27,7 +28,7 @@ func (r *config) Setup() error {
 	cp := os.Getenv("HOME") + "/.config/gitissue.json"
 
 	if _, err := os.Stat(cp); err == nil {
-		return fmt.Errorf("config file already exists at %s", cp)
+		return errors.New("config file already exists at " + cp)
 	}
 
 	file, err := os.Create(cp)

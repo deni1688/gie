@@ -1,8 +1,8 @@
 package domain
 
-type GitHost interface {
+type GitProvider interface {
 	GetRepos() (*[]Repo, error)
-	CreateIssue(repo Repo, issue Issue) error
+	CreateIssue(repo *Repo, issue *Issue) error
 }
 
 type Notifier interface {
@@ -13,5 +13,6 @@ type Service interface {
 	Notify(issues *[]Issue) error
 	ListRepos() (*[]Repo, error)
 	ExtractIssues(content, source string) (*[]Issue, error)
-	SubmitIssues(Repo, *[]Issue) error
+	SubmitIssue(repo *Repo, issue *Issue) error
+	FindRepoByName(name string) (*Repo, error)
 }

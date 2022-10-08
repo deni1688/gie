@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
-	"strings"
 )
 
 type Cli struct {
@@ -18,7 +16,6 @@ func NewCli(path string, service domain.Service) *Cli {
 	return &Cli{path, service}
 }
 
-// Issue: #2
 func (r Cli) Execute() error {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	origin, err := cmd.Output()
@@ -32,25 +29,20 @@ func (r Cli) Execute() error {
 	}
 
 	issues, err := r.service.ExtractIssues(string(b), r.path)
-	repos, err := r.service.ListRepos()
-	if err != nil {
-		return err
-	}
+	repo, err := r.service.FindRepoByName(string(origin))
 
-	var current domain.Repo
-	base := path.Base(string(origin))
-	for _, repo := range *repos {
-		if strings.Contains(base, repo.Name) {
-			fmt.Println("Found current: ", repo)
-			current = repo
-			break
+	for _, issue := range *issues {
+		fmt.Printf("\n")
+		if err = r.service.SubmitIssue(repo, &issue); err != nil {
+			return err
 		}
 	}
 
-	err = r.service.SubmitIssues(current, issues)
-	if err != nil {
+	// Issue: Not sure if this is the best way to do it
+	if err = r.service.Notify(issues); err != nil {
 		return err
 	}
 
-	return r.service.Notify(issues)
+	fmt.Printf("\n")
+	return nil
 }

@@ -10,11 +10,11 @@ type gitlab struct {
 	token  string
 	host   string
 	query  string
-	client *http.Client
+	client HttpClient
 }
 
-func NewGitlab(token, host, query string) domain.GitHost {
-	return &gitlab{token, host, query, http.DefaultClient}
+func NewGitlab(token, host, query string, client HttpClient) domain.GitProvider {
+	return &gitlab{token, host, query, client}
 }
 
 func (r gitlab) GetRepos() (*[]domain.Repo, error) {
@@ -23,6 +23,7 @@ func (r gitlab) GetRepos() (*[]domain.Repo, error) {
 		return nil, err
 	}
 
+	req.URL.RawQuery = r.query
 	resp, err := r.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -36,7 +37,7 @@ func (r gitlab) GetRepos() (*[]domain.Repo, error) {
 	return &repos, nil
 }
 
-func (r gitlab) CreateIssue(repo domain.Repo, issue domain.Issue) error {
+func (r gitlab) CreateIssue(repo *domain.Repo, issue *domain.Issue) error {
 	return nil
 }
 
@@ -48,7 +49,6 @@ func (r gitlab) request(method, resource string) (*http.Request, error) {
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("PRIVATE-TOKEN", r.token)
-	req.URL.RawQuery = r.query
 
 	return req, err
 }

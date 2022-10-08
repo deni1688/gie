@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -32,16 +33,16 @@ func main() {
 		return
 	}
 
-	p, err := newGitHost(c)
+	p, err := getProvider(c)
 	if err != nil {
 		fmt.Println("Error getting provider: ", err)
 		return
 	}
 
 	n := infra.NewWebhookNotifier(c.WebHooks)
-	srv := domain.NewService(p, n, c.Prefix)
-	cli := infra.NewCli(*path, srv)
-	if err := cli.Execute(); err != nil {
+	s := domain.NewService(p, n, c.Prefix)
+	cli := infra.NewCli(*path, s)
+	if err = cli.Execute(); err != nil {
 		fmt.Println("Error running cli:", err)
 		return
 	}
@@ -49,12 +50,12 @@ func main() {
 	fmt.Println("Done!")
 }
 
-func newGitHost(c *config) (domain.GitHost, error) {
+func getProvider(c *config) (domain.GitProvider, error) {
 	switch {
 	case strings.Contains(c.Host, "gitlab"):
-		return infra.NewGitlab(c.Token, c.Host, c.Query), nil
+		return infra.NewGitlab(c.Token, c.Host, c.Query, http.DefaultClient), nil
 	case strings.Contains(c.Host, "github"):
-		return infra.NewGithub(c.Token, c.Host, c.Query), nil
+		return infra.NewGithub(c.Token, c.Host, c.Query, http.DefaultClient), nil
 	default:
 		return nil, errors.New("invalid provider " + c.Host)
 	}

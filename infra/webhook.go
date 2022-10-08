@@ -13,8 +13,7 @@ type webhookNotifier struct {
 
 func (r webhookNotifier) Notify(issues *[]domain.Issue) error {
 	for _, webhook := range r.webhooks {
-		fmt.Println("Sending to webhook: ", webhook)
-		fmt.Println("Issues: ", issues)
+		fmt.Printf("Sending to webhook: %s\n", webhook)
 	}
 	return nil
 }
