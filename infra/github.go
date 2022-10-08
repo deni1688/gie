@@ -6,18 +6,18 @@ import (
 	"net/http"
 )
 
-type githubProvider struct {
+type github struct {
 	token  string
 	host   string
 	query  string
 	client *http.Client
 }
 
-func NewGithubProvider(token string, host string, query string) domain.Provider {
-	return &githubProvider{token, host, query, http.DefaultClient}
+func NewGithub(token string, host string, query string) domain.GitHost {
+	return &github{token, host, query, http.DefaultClient}
 }
 
-func (r githubProvider) GetRepos() (*[]domain.Repo, error) {
+func (r github) GetRepos() (*[]domain.Repo, error) {
 	req, err := r.request("GET", "/user/repos")
 	if err != nil {
 		return nil, err
@@ -36,11 +36,11 @@ func (r githubProvider) GetRepos() (*[]domain.Repo, error) {
 	return &repos, nil
 }
 
-func (r githubProvider) CreateIssue(repo domain.Repo, issue domain.Issue) error {
+func (r github) CreateIssue(repo domain.Repo, issue domain.Issue) error {
 	return nil
 }
 
-func (r githubProvider) request(method, resource string) (*http.Request, error) {
+func (r github) request(method, resource string) (*http.Request, error) {
 	req, err := http.NewRequest(method, r.host+resource, nil)
 	if err != nil {
 		return nil, err

@@ -6,6 +6,7 @@ type Repo struct {
 }
 
 type Issue struct {
+	ID    int    `json:"id"`
 	Title string `json:"title"`
 	Desc  string `json:"desc"`
 }

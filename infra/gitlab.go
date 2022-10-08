@@ -6,18 +6,18 @@ import (
 	"net/http"
 )
 
-type gitlabProvider struct {
+type gitlab struct {
 	token  string
 	host   string
 	query  string
 	client *http.Client
 }
 
-func NewGitlabProvider(token, host, query string) domain.Provider {
-	return &gitlabProvider{token, host, query, http.DefaultClient}
+func NewGitlab(token, host, query string) domain.GitHost {
+	return &gitlab{token, host, query, http.DefaultClient}
 }
 
-func (r gitlabProvider) GetRepos() (*[]domain.Repo, error) {
+func (r gitlab) GetRepos() (*[]domain.Repo, error) {
 	req, err := r.request("GET", "projects")
 	if err != nil {
 		return nil, err
@@ -36,11 +36,11 @@ func (r gitlabProvider) GetRepos() (*[]domain.Repo, error) {
 	return &repos, nil
 }
 
-func (r gitlabProvider) CreateIssue(repo domain.Repo, issue domain.Issue) error {
+func (r gitlab) CreateIssue(repo domain.Repo, issue domain.Issue) error {
 	return nil
 }
 
-func (r gitlabProvider) request(method, resource string) (*http.Request, error) {
+func (r gitlab) request(method, resource string) (*http.Request, error) {
 	req, err := http.NewRequest(method, r.endpoint(resource), nil)
 	if err != nil {
 		return nil, err
@@ -53,6 +53,6 @@ func (r gitlabProvider) request(method, resource string) (*http.Request, error) 
 	return req, err
 }
 
-func (r gitlabProvider) endpoint(resource string) string {
+func (r gitlab) endpoint(resource string) string {
 	return r.host + "/api/v4/" + resource
 }

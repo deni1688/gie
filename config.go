@@ -7,11 +7,11 @@ import (
 )
 
 type config struct {
-	Host     string `json:"host"`
-	Token    string `json:"token"`
-	Prefix   string `json:"prefix"`
-	Query    string `json:"query"`
-	Provider string `json:"provider"`
+	Host     string   `json:"host"`
+	Token    string   `json:"token"`
+	Prefix   string   `json:"prefix"`
+	Query    string   `json:"query"`
+	WebHooks []string `json:"webhooks"`
 }
 
 func (r *config) Load() error {
