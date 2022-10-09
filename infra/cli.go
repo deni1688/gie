@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type Cli struct {
@@ -28,21 +29,33 @@ func (r Cli) Execute() error {
 		return err
 	}
 
-	issues, err := r.service.ExtractIssues(string(b), r.path)
-	repo, err := r.service.FindRepoByName(string(origin))
+	content := string(b)
+	name := string(origin)
+
+	issues, err := r.service.ExtractIssues(content, r.path)
+
+	if len(*issues) < 1 {
+		fmt.Println("No issues found")
+		return nil
+	}
+
+	repo, err := r.service.FindRepoByName(name)
 
 	for _, issue := range *issues {
 		fmt.Printf("\n")
 		if err = r.service.SubmitIssue(repo, &issue); err != nil {
 			return err
 		}
+
+		updatedLine := fmt.Sprintf("%s -> %s\n", strings.Trim(issue.ExtractedLine, "\n"), issue.Url)
+		content = strings.Replace(content, issue.ExtractedLine, updatedLine, 1)
 	}
 
-	// Issue: Not sure if this is the best way to do it
+	fmt.Printf("\n")
+
 	if err = r.service.Notify(issues); err != nil {
 		return err
 	}
 
-	fmt.Printf("\n")
-	return nil
+	return os.WriteFile(r.path, []byte(content), 0644)
 }

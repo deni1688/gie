@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type config struct {
@@ -15,8 +16,19 @@ type config struct {
 	WebHooks []string `json:"webhooks"`
 }
 
-func (r *config) Load() error {
-	file, err := os.Open(os.Getenv("HOME") + "/.config/gitissue.json")
+func (r *config) Load(customPath string) error {
+	var p string
+	if customPath != "" {
+		if !strings.Contains(customPath, ".json") {
+			return errors.New("only json files are supported")
+		}
+
+		p = customPath
+	} else {
+		p = os.Getenv("HOME") + "/.config/gitissue.json"
+	}
+
+	file, err := os.Open(p)
 	if err != nil {
 		return err
 	}

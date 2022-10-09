@@ -32,7 +32,6 @@ func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 	return nil
 }
 
-// Issue: Find way to mark issue after it has been submitted with the url so that it won't be submitted again
 func (r service) ExtractIssues(content, source string) (*[]Issue, error) {
 	regx, err := regexp.Compile(r.prefix + "(.*)\n")
 
@@ -44,9 +43,14 @@ func (r service) ExtractIssues(content, source string) (*[]Issue, error) {
 	if strings.Contains(content, r.prefix) {
 		foundIssues := regx.FindAllString(content, -1)
 		for _, title := range foundIssues {
+			if strings.Contains(title, " -> ") {
+				continue
+			}
+
 			issue := Issue{}
 			issue.Title = strings.Trim(strings.TrimPrefix(title, r.prefix), " \n")
 			issue.Desc = "Extracted from " + source
+			issue.ExtractedLine = title
 			issues = append(issues, issue)
 		}
 	}

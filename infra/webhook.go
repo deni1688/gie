@@ -3,12 +3,11 @@ package infra
 import (
 	"deni1688/gitissue/domain"
 	"fmt"
-	"net/http"
 )
 
 type webhookNotifier struct {
 	webhooks []string
-	client   *http.Client
+	client   HttpClient
 }
 
 func (r webhookNotifier) Notify(issues *[]domain.Issue) error {
@@ -18,6 +17,6 @@ func (r webhookNotifier) Notify(issues *[]domain.Issue) error {
 	return nil
 }
 
-func NewWebhookNotifier(webhooks []string) domain.Notifier {
-	return &webhookNotifier{webhooks, http.DefaultClient}
+func NewWebhookNotifier(webhooks []string, client HttpClient) domain.Notifier {
+	return &webhookNotifier{webhooks, client}
 }

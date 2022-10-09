@@ -12,7 +12,9 @@ import (
 
 func main() {
 	setup := flag.Bool("setup", false, "setup config file")
-	path := flag.String("path", "./issues.txt", "please provide file path to parse issues from")
+	customPath := flag.String("config", "", "custom config file path")
+	path := flag.String("path", "./issues.txt", "file path to parse issues from")
+	prefix := flag.String("prefix", "", "prefix to override config")
 	flag.Parse()
 
 	if *path == "" {
@@ -28,18 +30,22 @@ func main() {
 		return
 	}
 
-	if err := c.Load(); err != nil {
-		fmt.Println("Error reading config at $HOME/.config/gitissue.json")
+	if err := c.Load(*customPath); err != nil {
+		fmt.Println("Error reading config:", err)
 		return
 	}
 
-	p, err := getProvider(c)
+	if *prefix != "" {
+		c.Prefix = *prefix
+	}
+
+	p, err := newGitProvider(c)
 	if err != nil {
-		fmt.Println("Error getting provider: ", err)
+		fmt.Println("Error getting provider:", err)
 		return
 	}
 
-	n := infra.NewWebhookNotifier(c.WebHooks)
+	n := infra.NewWebhookNotifier(c.WebHooks, http.DefaultClient)
 	s := domain.NewService(p, n, c.Prefix)
 	cli := infra.NewCli(*path, s)
 	if err = cli.Execute(); err != nil {
@@ -50,7 +56,7 @@ func main() {
 	fmt.Println("Done!")
 }
 
-func getProvider(c *config) (domain.GitProvider, error) {
+func newGitProvider(c *config) (domain.GitProvider, error) {
 	switch {
 	case strings.Contains(c.Host, "gitlab"):
 		return infra.NewGitlab(c.Token, c.Host, c.Query, http.DefaultClient), nil
