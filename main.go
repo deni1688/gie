@@ -1,8 +1,8 @@
 package main
 
 import (
-	"deni1688/gitissue/domain"
-	"deni1688/gitissue/infra"
+	"deni1688/gogie/domain"
+	"deni1688/gogie/infra"
 	"errors"
 	"flag"
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	setup := flag.Bool("setup", false, "setup config file")
+	setup := flag.Bool("setup", false, "creates a config file")
 	customPath := flag.String("config", "", "custom config file path")
 	path := flag.String("path", "./issues.txt", "file path to parse issues from")
 	prefix := flag.String("prefix", "", "prefix to override config")

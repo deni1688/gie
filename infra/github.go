@@ -2,7 +2,7 @@ package infra
 
 import (
 	"bytes"
-	"deni1688/gitissue/domain"
+	"deni1688/gogie/domain"
 	"encoding/json"
 	"fmt"
 	"io"

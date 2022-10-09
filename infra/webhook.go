@@ -1,7 +1,7 @@
 package infra
 
 import (
-	"deni1688/gitissue/domain"
+	"deni1688/gogie/domain"
 	"fmt"
 )
 

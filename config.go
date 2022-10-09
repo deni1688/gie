@@ -25,7 +25,7 @@ func (r *config) Load(customPath string) error {
 
 		p = customPath
 	} else {
-		p = os.Getenv("HOME") + "/.config/gitissue.json"
+		p = os.Getenv("HOME") + "/.config/gogie.json"
 	}
 
 	file, err := os.Open(p)
@@ -37,7 +37,7 @@ func (r *config) Load(customPath string) error {
 }
 
 func (r *config) Setup() error {
-	cp := os.Getenv("HOME") + "/.config/gitissue.json"
+	cp := os.Getenv("HOME") + "/.config/gogie.json"
 
 	if _, err := os.Stat(cp); err == nil {
 		return errors.New("config file already exists at " + cp)
