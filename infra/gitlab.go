@@ -37,6 +37,7 @@ func (r gitlab) GetRepos() (*[]domain.Repo, error) {
 	return &repos, nil
 }
 
+// Todo: Implement the CreateIssue method for Gitlab -> https://github.com/deni1688/gogie/issues/27
 func (r gitlab) CreateIssue(repo *domain.Repo, issue *domain.Issue) error {
 	return nil
 }
