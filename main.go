@@ -12,7 +12,7 @@ import (
 
 func main() {
 	setup := flag.Bool("setup", false, "creates a config file")
-	customPath := flag.String("config", "", "custom config file path")
+	configPath := flag.String("config", "", "custom config file path")
 	path := flag.String("path", "./issues.txt", "file path to parse issues from")
 	prefix := flag.String("prefix", "", "prefix to override config")
 	flag.Parse()
@@ -30,7 +30,7 @@ func main() {
 		return
 	}
 
-	if err := c.Load(*customPath); err != nil {
+	if err := c.Load(*configPath); err != nil {
 		fmt.Println("Error reading config:", err)
 		return
 	}
@@ -47,10 +47,11 @@ func main() {
 
 	n := infra.NewWebhookNotifier(c.WebHooks, http.DefaultClient)
 	s := domain.NewService(p, n, c.Prefix)
-	cli := infra.NewCli(*path, s)
-	if err = cli.Execute(); err != nil {
+	cli := infra.NewCli(s)
+
+	// Todo: Make it possible to run the cli.Execute() with dir path -> https://github.com/deni1688/gogie/issues/26
+	if err = cli.Execute(*path); err != nil {
 		fmt.Println("Error running cli:", err)
-		return
 	}
 
 	fmt.Println("Done!")

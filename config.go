@@ -32,6 +32,7 @@ func (r *config) Load(customPath string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	return json.NewDecoder(file).Decode(r)
 }

@@ -9,22 +9,21 @@ import (
 )
 
 type Cli struct {
-	path    string
 	service domain.Service
 }
 
-func NewCli(path string, service domain.Service) *Cli {
-	return &Cli{path, service}
+func NewCli(service domain.Service) *Cli {
+	return &Cli{service}
 }
 
-func (r Cli) Execute() error {
+func (r Cli) Execute(path string) error {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	origin, err := cmd.Output()
 	if err != nil {
 		return err
 	}
 
-	b, err := os.ReadFile(r.path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -32,7 +31,7 @@ func (r Cli) Execute() error {
 	content := string(b)
 	name := string(origin)
 
-	issues, err := r.service.ExtractIssues(content, r.path)
+	issues, err := r.service.ExtractIssues(content, path)
 
 	if len(*issues) < 1 {
 		fmt.Println("No issues found")
@@ -57,5 +56,5 @@ func (r Cli) Execute() error {
 		return err
 	}
 
-	return os.WriteFile(r.path, []byte(content), 0644)
+	return os.WriteFile(path, []byte(content), 0644)
 }
