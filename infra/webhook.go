@@ -34,8 +34,9 @@ func (r webhookNotifier) Notify(issues *[]issues.Issue) error {
 		return err
 	}
 
+	buffer := bytes.NewBuffer(payload)
 	for _, webhook := range r.webhooks {
-		req, err = http.NewRequest("POST", webhook, bytes.NewBuffer(payload))
+		req, err = http.NewRequest("POST", webhook, buffer)
 		if err != nil {
 			return err
 		}
