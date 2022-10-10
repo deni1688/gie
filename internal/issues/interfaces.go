@@ -10,7 +10,7 @@ type Notifier interface {
 }
 
 type Service interface {
-	ExtractIssues(content, source string) (*[]Issue, error)
+	ExtractIssues(content, source *string) (*[]Issue, error)
 	FindRepoByName(name string) (*Repo, error)
 	SubmitIssue(repo *Repo, issue *Issue) error
 	Notify(issues *[]Issue) error

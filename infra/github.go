@@ -14,10 +14,11 @@ type github struct {
 	host   string
 	query  string
 	client HttpClient
+	repos  *[]issues.Repo
 }
 
 func NewGithub(token string, host string, query string, client HttpClient) issues.GitProvider {
-	return &github{token, host, query, client}
+	return &github{token, host, query, client, nil}
 }
 
 type githubRepo struct {
@@ -35,6 +36,10 @@ type githubIssue struct {
 }
 
 func (r github) GetRepos() (*[]issues.Repo, error) {
+	if r.repos != nil {
+		return r.repos, nil
+	}
+
 	req, err := r.request("GET", "/user/repos")
 	if err != nil {
 		return nil, err

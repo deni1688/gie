@@ -48,8 +48,6 @@ func main() {
 	notifier := infra.NewWebhookNotifier(c.WebHooks, http.DefaultClient)
 	service := issues.NewService(provider, notifier, c.Prefix)
 	cli := infra.NewCli(service)
-
-	// Todo: Make it possible to run the cli.Execute() with dir path -> https://github.com/deni1688/gogie/issues/26
 	if err = cli.Execute(*path); err != nil {
 		fmt.Println("Error running cli:", err)
 	}

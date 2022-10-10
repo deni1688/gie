@@ -23,6 +23,28 @@ func (r Cli) Execute(path string) error {
 		return err
 	}
 
+	fi, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	if fi.IsDir() {
+		var files []os.DirEntry
+		files, err = os.ReadDir(path)
+		if err != nil {
+			return err
+		}
+
+		for _, file := range files {
+			err = r.Execute(path + "/" + file.Name())
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -31,15 +53,12 @@ func (r Cli) Execute(path string) error {
 	content := string(b)
 	name := string(origin)
 
-	foundIssues, err := r.service.ExtractIssues(content, path)
-
+	foundIssues, err := r.service.ExtractIssues(&content, &path)
 	if len(*foundIssues) < 1 {
-		fmt.Println("No issues found")
 		return nil
 	}
 
 	repo, err := r.service.FindRepoByName(name)
-
 	for _, issue := range *foundIssues {
 		fmt.Printf("\n")
 		if err = r.service.SubmitIssue(repo, &issue); err != nil {
@@ -51,7 +70,6 @@ func (r Cli) Execute(path string) error {
 	}
 
 	fmt.Printf("\n")
-
 	if err = r.service.Notify(foundIssues); err != nil {
 		return err
 	}

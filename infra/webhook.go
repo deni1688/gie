@@ -18,7 +18,7 @@ func NewWebhookNotifier(webhooks []string, client HttpClient) issues.Notifier {
 }
 
 func (r webhookNotifier) Notify(issues *[]issues.Issue) error {
-	if len(r.webhooks) < 1 {
+	if len(r.webhooks) < 1 || r.webhooks == nil {
 		return nil
 	}
 
@@ -28,13 +28,14 @@ func (r webhookNotifier) Notify(issues *[]issues.Issue) error {
 		resp *http.Response
 	)
 
-	issuesJson, err := json.Marshal(issues)
+	var payload []byte
+	payload, err = json.Marshal(issues)
 	if err != nil {
 		return err
 	}
 
 	for _, webhook := range r.webhooks {
-		req, err = http.NewRequest("POST", webhook, bytes.NewBuffer(issuesJson))
+		req, err = http.NewRequest("POST", webhook, bytes.NewBuffer(payload))
 		if err != nil {
 			return err
 		}

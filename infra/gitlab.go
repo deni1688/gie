@@ -14,6 +14,7 @@ type gitlab struct {
 	host   string
 	query  string
 	client HttpClient
+	repos  *[]issues.Repo
 }
 
 type gitlabIssue struct {
@@ -24,10 +25,14 @@ type gitlabIssue struct {
 }
 
 func NewGitlab(token, host, query string, client HttpClient) issues.GitProvider {
-	return &gitlab{token, host, query, client}
+	return &gitlab{token, host, query, client, nil}
 }
 
 func (r gitlab) GetRepos() (*[]issues.Repo, error) {
+	if r.repos != nil {
+		return r.repos, nil
+	}
+
 	req, err := r.request("GET", "projects")
 	if err != nil {
 		return nil, err

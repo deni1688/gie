@@ -32,7 +32,7 @@ func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 	return nil
 }
 
-func (r service) ExtractIssues(content, source string) (*[]Issue, error) {
+func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	regx, err := regexp.Compile(r.prefix + "(.*)\n")
 
 	var issues []Issue
@@ -40,8 +40,8 @@ func (r service) ExtractIssues(content, source string) (*[]Issue, error) {
 		return nil, err
 	}
 
-	if strings.Contains(content, r.prefix) {
-		foundIssues := regx.FindAllString(content, -1)
+	if strings.Contains(*content, r.prefix) {
+		foundIssues := regx.FindAllString(*content, -1)
 		for _, title := range foundIssues {
 			if strings.Contains(title, " -> ") {
 				continue
@@ -49,7 +49,7 @@ func (r service) ExtractIssues(content, source string) (*[]Issue, error) {
 
 			issue := Issue{}
 			issue.Title = strings.Trim(strings.TrimPrefix(title, r.prefix), " \n")
-			issue.Desc = "Extracted from " + source
+			issue.Desc = "Extracted from " + *source
 			issue.ExtractedLine = title
 			issues = append(issues, issue)
 		}
