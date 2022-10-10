@@ -31,16 +31,16 @@ func (r Cli) Execute(path string) error {
 	content := string(b)
 	name := string(origin)
 
-	issues, err := r.service.ExtractIssues(content, path)
+	foundIssues, err := r.service.ExtractIssues(content, path)
 
-	if len(*issues) < 1 {
+	if len(*foundIssues) < 1 {
 		fmt.Println("No issues found")
 		return nil
 	}
 
 	repo, err := r.service.FindRepoByName(name)
 
-	for _, issue := range *issues {
+	for _, issue := range *foundIssues {
 		fmt.Printf("\n")
 		if err = r.service.SubmitIssue(repo, &issue); err != nil {
 			return err
@@ -52,7 +52,7 @@ func (r Cli) Execute(path string) error {
 
 	fmt.Printf("\n")
 
-	if err = r.service.Notify(issues); err != nil {
+	if err = r.service.Notify(foundIssues); err != nil {
 		return err
 	}
 

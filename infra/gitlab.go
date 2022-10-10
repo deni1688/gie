@@ -40,11 +40,8 @@ func (r gitlab) GetRepos() (*[]issues.Repo, error) {
 	}
 
 	var repos []issues.Repo
-	if err = json.NewDecoder(resp.Body).Decode(&repos); err != nil {
-		return nil, err
-	}
 
-	return &repos, nil
+	return &repos, json.NewDecoder(resp.Body).Decode(&repos)
 }
 
 // Todo: Implement the CreateIssue method for Gitlab -> https://github.com/deni1688/gogie/issues/27
