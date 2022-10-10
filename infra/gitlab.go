@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"deni1688/gogie/internal/issues"
 	"encoding/json"
 	"net/http"
 )
@@ -12,11 +13,11 @@ type gitlab struct {
 	client HttpClient
 }
 
-func NewGitlab(token, host, query string, client HttpClient) gogie.GitProvider {
+func NewGitlab(token, host, query string, client HttpClient) issues.GitProvider {
 	return &gitlab{token, host, query, client}
 }
 
-func (r gitlab) GetRepos() (*[]gogie.Repo, error) {
+func (r gitlab) GetRepos() (*[]issues.Repo, error) {
 	req, err := r.request("GET", "projects")
 	if err != nil {
 		return nil, err
@@ -28,7 +29,7 @@ func (r gitlab) GetRepos() (*[]gogie.Repo, error) {
 		return nil, err
 	}
 
-	var repos []gogie.Repo
+	var repos []issues.Repo
 	if err = json.NewDecoder(resp.Body).Decode(&repos); err != nil {
 		return nil, err
 	}
@@ -37,7 +38,7 @@ func (r gitlab) GetRepos() (*[]gogie.Repo, error) {
 }
 
 // Todo: Implement the CreateIssue method for Gitlab -> https://github.com/deni1688/gogie/issues/27
-func (r gitlab) CreateIssue(repo *gogie.Repo, issue *gogie.Issue) error {
+func (r gitlab) CreateIssue(repo *issues.Repo, issue *issues.Issue) error {
 	return nil
 }
 

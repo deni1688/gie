@@ -2,6 +2,7 @@ package main
 
 import (
 	"deni1688/gogie/infra"
+	"deni1688/gogie/internal/issues"
 	"errors"
 	"flag"
 	"fmt"
@@ -38,15 +39,15 @@ func main() {
 		c.Prefix = *prefix
 	}
 
-	p, err := newGitProvider(c)
+	provider, err := newGitProvider(c)
 	if err != nil {
 		fmt.Println("Error getting provider:", err)
 		return
 	}
 
-	n := infra.NewWebhookNotifier(c.WebHooks, http.DefaultClient)
-	s := gogie.NewService(p, n, c.Prefix)
-	cli := infra.NewCli(s)
+	notifier := infra.NewWebhookNotifier(c.WebHooks, http.DefaultClient)
+	service := issues.NewService(provider, notifier, c.Prefix)
+	cli := infra.NewCli(service)
 
 	// Todo: Make it possible to run the cli.Execute() with dir path -> https://github.com/deni1688/gogie/issues/26
 	if err = cli.Execute(*path); err != nil {
@@ -56,7 +57,7 @@ func main() {
 	fmt.Println("Done!")
 }
 
-func newGitProvider(c *config) (gogie.GitProvider, error) {
+func newGitProvider(c *config) (issues.GitProvider, error) {
 	switch {
 	case strings.Contains(c.Host, "gitlab"):
 		return infra.NewGitlab(c.Token, c.Host, c.Query, http.DefaultClient), nil
