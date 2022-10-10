@@ -10,6 +10,7 @@ type webhookNotifier struct {
 	client   HttpClient
 }
 
+// Todo: Implement Notify for webhooks -> https://github.com/deni1688/gogie/issues/28
 func (r webhookNotifier) Notify(issues *[]issues.Issue) error {
 	for _, webhook := range r.webhooks {
 		fmt.Printf("Sending to webhook: %s\n", webhook)
