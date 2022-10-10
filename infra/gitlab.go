@@ -47,7 +47,6 @@ func (r gitlab) GetRepos() (*[]issues.Repo, error) {
 	return &repos, nil
 }
 
-// Todo: Implement the CreateIssue method for Gitlab -> https://github.com/deni1688/gogie/issues/27
 func (r gitlab) CreateIssue(repo *issues.Repo, issue *issues.Issue) error {
 	req, err := r.request("POST", fmt.Sprintf("projects/%d/issues", repo.ID))
 	if err != nil {
