@@ -1,4 +1,4 @@
-package domain
+package issues
 
 type Repo struct {
 	ID    int    `json:"id"`

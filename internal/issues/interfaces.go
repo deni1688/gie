@@ -1,4 +1,4 @@
-package domain
+package issues
 
 type GitProvider interface {
 	GetRepos() (*[]Repo, error)
@@ -10,9 +10,9 @@ type Notifier interface {
 }
 
 type Service interface {
-	Notify(issues *[]Issue) error
-	ListRepos() (*[]Repo, error)
 	ExtractIssues(content, source string) (*[]Issue, error)
-	SubmitIssue(repo *Repo, issue *Issue) error
 	FindRepoByName(name string) (*Repo, error)
+	SubmitIssue(repo *Repo, issue *Issue) error
+	Notify(issues *[]Issue) error
+	listRepos() (*[]Repo, error)
 }

@@ -1,4 +1,4 @@
-package domain
+package issues
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ func NewService(gitProvider GitProvider, notifier Notifier, prefix string) Servi
 	return &service{gitProvider, notifier, prefix}
 }
 
-func (r service) ListRepos() (*[]Repo, error) {
+func (r service) listRepos() (*[]Repo, error) {
 	return r.gitProvider.GetRepos()
 }
 
@@ -63,7 +63,7 @@ func (r service) Notify(issues *[]Issue) error {
 }
 
 func (r service) FindRepoByName(name string) (*Repo, error) {
-	repos, err := r.ListRepos()
+	repos, err := r.listRepos()
 	if err != nil {
 		return &Repo{}, err
 	}

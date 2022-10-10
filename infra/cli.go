@@ -1,7 +1,7 @@
 package infra
 
 import (
-	"deni1688/gogie/domain"
+	"deni1688/gogie/internal/issues"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,10 +9,10 @@ import (
 )
 
 type Cli struct {
-	service domain.Service
+	service issues.Service
 }
 
-func NewCli(service domain.Service) *Cli {
+func NewCli(service issues.Service) *Cli {
 	return &Cli{service}
 }
 

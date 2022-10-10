@@ -2,7 +2,6 @@ package infra
 
 import (
 	"bytes"
-	"deni1688/gogie/domain"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,12 +15,12 @@ type github struct {
 	client HttpClient
 }
 
-func NewGithub(token string, host string, query string, client HttpClient) domain.GitProvider {
+func NewGithub(token string, host string, query string, client HttpClient) gogie.GitProvider {
 	return &github{token, host, query, client}
 }
 
 type githubRepo struct {
-	*domain.Repo
+	*gogie.Repo
 	Owner struct {
 		Login string `json:"login"`
 	} `json:"owner"`
@@ -34,7 +33,7 @@ type githubIssue struct {
 	HtmlUrl string `json:"html_url"`
 }
 
-func (r github) GetRepos() (*[]domain.Repo, error) {
+func (r github) GetRepos() (*[]gogie.Repo, error) {
 	req, err := r.request("GET", "/user/repos")
 	if err != nil {
 		return nil, err
@@ -51,15 +50,15 @@ func (r github) GetRepos() (*[]domain.Repo, error) {
 		return nil, err
 	}
 
-	var domainRepos []domain.Repo
+	var domainRepos []gogie.Repo
 	for _, repo := range repos {
-		domainRepos = append(domainRepos, domain.Repo{ID: repo.ID, Name: repo.Name, Owner: repo.Owner.Login})
+		domainRepos = append(domainRepos, gogie.Repo{ID: repo.ID, Name: repo.Name, Owner: repo.Owner.Login})
 	}
 
 	return &domainRepos, nil
 }
 
-func (r github) CreateIssue(repo *domain.Repo, issue *domain.Issue) error {
+func (r github) CreateIssue(repo *gogie.Repo, issue *gogie.Issue) error {
 	req, err := r.request("POST", "/repos/"+repo.Owner+"/"+repo.Name+"/issues")
 	if err != nil {
 		return err
