@@ -34,7 +34,11 @@ func (r *config) Load(customPath string) error {
 	}
 	defer file.Close()
 
-	return json.NewDecoder(file).Decode(r)
+	if err = json.NewDecoder(file).Decode(r); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *config) Setup() error {
@@ -51,5 +55,9 @@ func (r *config) Setup() error {
 
 	fmt.Printf("Creating config file at %s. Navigate to the file and fill in the details.\n", cp)
 
-	return json.NewEncoder(file).Encode(r)
+	if err = json.NewEncoder(file).Encode(r); err != nil {
+		return err
+	}
+
+	return nil
 }
