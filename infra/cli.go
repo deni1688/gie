@@ -10,10 +10,11 @@ import (
 
 type Cli struct {
 	service issues.Service
+	dry     bool
 }
 
-func NewCli(service issues.Service) *Cli {
-	return &Cli{service}
+func NewCli(service issues.Service, dry bool) *Cli {
+	return &Cli{service, dry}
 }
 
 func (r Cli) Execute(path string) error {
@@ -55,6 +56,14 @@ func (r Cli) Execute(path string) error {
 
 	foundIssues, err := r.service.ExtractIssues(&content, &path)
 	if len(*foundIssues) < 1 {
+		return nil
+	}
+
+	if r.dry {
+		for _, issue := range *foundIssues {
+			fmt.Printf("Found issue=[%s] in file=[%s]\n", issue.Title, path)
+		}
+
 		return nil
 	}
 

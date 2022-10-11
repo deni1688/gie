@@ -15,6 +15,7 @@ func main() {
 	configPath := flag.String("config", "", "custom config file path")
 	path := flag.String("path", "./issues.txt", "file path to parse issues from")
 	prefix := flag.String("prefix", "", "prefix to override config")
+	dry := flag.Bool("dry", false, "dry run")
 	flag.Parse()
 
 	if *path == "" {
@@ -47,7 +48,7 @@ func main() {
 
 	notifier := infra.NewWebhookNotifier(c.WebHooks, http.DefaultClient)
 	service := issues.NewService(provider, notifier, c.Prefix)
-	cli := infra.NewCli(service)
+	cli := infra.NewCli(service, *dry)
 	if err = cli.Execute(*path); err != nil {
 		fmt.Println("Error running cli:", err)
 	}
