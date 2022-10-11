@@ -40,10 +40,12 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 		return nil, err
 	}
 
+	issuesMap := make(map[string]Issue)
+
 	if strings.Contains(*content, r.prefix) {
 		foundIssues := regx.FindAllString(*content, -1)
 		for _, title := range foundIssues {
-			if strings.Contains(title, " -> ") {
+			if strings.Contains(title, " -> ") || issuesMap[title] != (Issue{}) {
 				continue
 			}
 
@@ -52,6 +54,7 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 			issue.Desc = "Extracted from " + *source
 			issue.ExtractedLine = title
 			issues = append(issues, issue)
+			issuesMap[title] = issue
 		}
 	}
 
