@@ -50,7 +50,8 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 			}
 
 			issue := Issue{}
-			issue.Title = strings.Trim(strings.TrimPrefix(title, r.prefix), " \n")
+			trimmedTitle := strings.Trim(strings.TrimPrefix(title, r.prefix), " \n")
+			issue.Title = strings.ToUpper(trimmedTitle[:1]) + trimmedTitle[1:]
 			issue.Desc = "Extracted from " + *source
 			issue.ExtractedLine = title
 			issues = append(issues, issue)
