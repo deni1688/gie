@@ -5,6 +5,7 @@ import (
 	"deni1688/gogie/internal/issues"
 	"fmt"
 	"golang.org/x/sync/errgroup"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -40,14 +41,19 @@ func (r Cli) Execute(path string) error {
 		return nil
 	}
 
-	b, err := os.ReadFile(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 
-	content := string(b)
-	name := string(origin)
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	f.Close()
 
+	name := string(origin)
+	content := string(b)
 	foundIssues, err := r.service.ExtractIssues(&content, &path)
 	if len(*foundIssues) < 1 {
 		return nil
@@ -91,14 +97,15 @@ func (r Cli) ExecuteConcurrently(path string) error {
 	}
 
 	g, ctx := errgroup.WithContext(r.ctx)
-	for _, file := range files {
-		f := file
+	g.SetLimit(15)
+	for _, dirEntry := range files {
+		de := dirEntry
 		g.Go(func() error {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				return r.Execute(path + "/" + f.Name())
+				return r.Execute(path + "/" + de.Name())
 			}
 		})
 	}
