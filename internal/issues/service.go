@@ -21,9 +21,9 @@ func (r service) listRepos() (*[]Repo, error) {
 	return r.gitProvider.GetRepos()
 }
 
-func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
+func (r service) SubmitIssue(repo *Repo, issue Issue) error {
 	fmt.Printf("Submitting issue=[%s] to repo=[%s]\n", issue.Title, repo.Name)
-	if err := r.gitProvider.CreateIssue(repo, issue); err != nil {
+	if err := r.gitProvider.CreateIssue(repo, &issue); err != nil {
 		return err
 	}
 
@@ -43,12 +43,17 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	if strings.Contains(*content, r.prefix) {
 		foundIssues := regx.FindAllString(*content, -1)
 		for _, title := range foundIssues {
-			if strings.Contains(title, " -> ") || issuesMap[title] != (Issue{}) {
+			if strings.Contains(title, " -> closes ") || issuesMap[title] != (Issue{}) {
 				continue
 			}
 
 			issue := Issue{}
 			trimmedTitle := strings.Trim(strings.TrimPrefix(title, r.prefix), " \n")
+
+			if trimmedTitle == "" {
+				continue
+			}
+
 			issue.Title = strings.ToUpper(trimmedTitle[:1]) + trimmedTitle[1:]
 			issue.Desc = "Extracted from " + *source
 			issue.ExtractedLine = title
@@ -60,8 +65,8 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	return &issues, nil
 }
 
-func (r service) Notify(issues *[]Issue) error {
-	return r.notifier.Notify(issues)
+func (r service) GetUpdatedLine(issue Issue) string {
+	return fmt.Sprintf("%s -> closes %s\n", strings.Trim(issue.ExtractedLine, "\n"), issue.Url)
 }
 
 func (r service) FindRepoByName(name string) (*Repo, error) {
@@ -80,4 +85,9 @@ func (r service) FindRepoByName(name string) (*Repo, error) {
 	}
 
 	return &Repo{}, fmt.Errorf("repo=[%s] not found", name)
+
+}
+
+func (r service) Notify(issues *[]Issue) error {
+	return r.notifier.Notify(issues)
 }

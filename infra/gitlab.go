@@ -43,6 +43,7 @@ func (r gitlab) GetRepos() (*[]issues.Repo, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var repos []issues.Repo
 	if err = json.NewDecoder(resp.Body).Decode(&repos); err != nil {
@@ -69,6 +70,7 @@ func (r gitlab) CreateIssue(repo *issues.Repo, issue *issues.Issue) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)

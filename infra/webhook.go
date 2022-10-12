@@ -46,6 +46,7 @@ func (r webhookNotifier) Notify(issues *[]issues.Issue) error {
 		if err != nil || resp.StatusCode >= 400 {
 			fmt.Printf("Error sending webhook %s %s\n", webhook, err)
 		}
+		defer resp.Body.Close()
 	}
 
 	return nil
