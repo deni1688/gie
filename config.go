@@ -24,7 +24,7 @@ func (r *config) Load(customPath string) error {
 
 		p = customPath
 	} else {
-		p = os.Getenv("HOME") + "/.config/gogie.json"
+		p = os.Getenv("HOME") + "/.config/gie.json"
 	}
 
 	file, err := os.Open(p)
@@ -41,7 +41,7 @@ func (r *config) Load(customPath string) error {
 }
 
 func (r *config) Setup() error {
-	defaultConfigPath := os.Getenv("HOME") + "/.config/gogie.json"
+	defaultConfigPath := os.Getenv("HOME") + "/.config/gie.json"
 
 	if _, err := os.Stat(defaultConfigPath); err == nil {
 		return fmt.Errorf("config file already exists at %s", defaultConfigPath)

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"deni1688/gogie/infra"
-	"deni1688/gogie/internal/issues"
+	"deni1688/gie/infra"
+	"deni1688/gie/internal/issues"
 	"flag"
 	"fmt"
 	"net/http"

@@ -2,7 +2,7 @@ package infra
 
 import (
 	"bytes"
-	"deni1688/gogie/internal/issues"
+	"deni1688/gie/internal/issues"
 	"encoding/json"
 	"fmt"
 	"io"

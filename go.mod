@@ -1,4 +1,4 @@
-module deni1688/gogie
+module deni1688/gie
 
 go 1.18
 

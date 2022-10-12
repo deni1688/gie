@@ -2,7 +2,7 @@ package infra
 
 import (
 	"context"
-	"deni1688/gogie/internal/issues"
+	"deni1688/gie/internal/issues"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"io"
