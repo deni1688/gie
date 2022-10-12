@@ -3,10 +3,11 @@ package main
 import (
 	"deni1688/gogie/infra"
 	"deni1688/gogie/internal/issues"
-	"errors"
 	"flag"
 	"fmt"
 	"net/http"
+	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -18,6 +19,12 @@ func main() {
 	dry := flag.Bool("dry", false, "dry run")
 	flag.Parse()
 
+	repoName, err := getCurrentRepoName()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	if *path == "" {
 		fmt.Println("Please provide file path to parse issues from")
 		return
@@ -25,13 +32,14 @@ func main() {
 
 	c := new(config)
 	if *setup {
-		if err := c.Setup(); err != nil {
+		if err = c.Setup(); err != nil {
 			fmt.Println(err)
 		}
+
 		return
 	}
 
-	if err := c.Load(*configPath); err != nil {
+	if err = c.Load(*configPath); err != nil {
 		fmt.Println("Error reading config:", err)
 		return
 	}
@@ -48,12 +56,11 @@ func main() {
 
 	notifier := infra.NewWebhookNotifier(c.WebHooks, http.DefaultClient)
 	service := issues.NewService(provider, notifier, c.Prefix)
-	cli := infra.NewCli(service, *dry)
+	cli := infra.NewCli(service, *dry, repoName)
+
 	if err = cli.Execute(*path); err != nil {
 		fmt.Println("Error running cli:", err)
 	}
-
-	fmt.Println("Done!")
 }
 
 func newGitProvider(c *config) (issues.GitProvider, error) {
@@ -63,6 +70,22 @@ func newGitProvider(c *config) (issues.GitProvider, error) {
 	case strings.Contains(c.Host, "github"):
 		return infra.NewGithub(c.Token, c.Host, c.Query, http.DefaultClient), nil
 	default:
-		return nil, errors.New("invalid provider " + c.Host)
+		return nil, fmt.Errorf("invalid provider %s", c.Host)
 	}
+}
+
+func getCurrentRepoName() (string, error) {
+	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
+	res, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	re := regexp.MustCompile(`/(.*)\.git`)
+	matches := re.FindStringSubmatch(string(res))
+	if matches == nil {
+		return "", fmt.Errorf("could not find current repo name. Make sure you are in a git repo with a remote origin")
+	}
+
+	return matches[1], nil
 }

@@ -50,18 +50,19 @@ func (r github) GetRepos() (*[]issues.Repo, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	var repos []githubRepo
-	if err = json.NewDecoder(resp.Body).Decode(&repos); err != nil {
+	var githubRepos []githubRepo
+	if err = json.NewDecoder(resp.Body).Decode(&githubRepos); err != nil {
 		return nil, err
 	}
 
-	var domainRepos []issues.Repo
-	for _, repo := range repos {
-		domainRepos = append(domainRepos, issues.Repo{ID: repo.ID, Name: repo.Name, Owner: repo.Owner.Login})
+	repos := make([]issues.Repo, len(githubRepos))
+	for _, repo := range githubRepos {
+		repos = append(repos, issues.Repo{ID: repo.ID, Name: repo.Name, Owner: repo.Owner.Login})
 	}
 
-	return &domainRepos, nil
+	return &repos, nil
 }
 
 func (r github) CreateIssue(repo *issues.Repo, issue *issues.Issue) error {
@@ -76,11 +77,11 @@ func (r github) CreateIssue(repo *issues.Repo, issue *issues.Issue) error {
 	}
 
 	req.Body = io.NopCloser(bytes.NewReader(body))
-
 	resp, err := r.client.Do(req)
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
