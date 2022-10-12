@@ -29,13 +29,24 @@ func (r Cli) Execute(path string) error {
 		return err
 	}
 
+	foundIssues := make([]issues.Issue, 0)
+	if err = r.execute(path, repoName, &foundIssues); err != nil {
+		return err
+	}
+
+	// Todo: Optimally the service.Notify should be called after all issues are submitted and files are updated -> https://github.com/deni1688/gogie/issues/29
+	fmt.Printf("\n")
+	return r.service.Notify(&foundIssues)
+}
+
+func (r Cli) execute(path, repoName string, issues *[]issues.Issue) error {
 	inf, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
 
 	if inf.IsDir() {
-		if err = r.ExecuteConcurrently(path); err != nil {
+		if err = r.executeConcurrently(path, repoName, issues); err != nil {
 			return err
 		}
 
@@ -58,6 +69,7 @@ func (r Cli) Execute(path string) error {
 	if len(*foundIssues) < 1 {
 		return nil
 	}
+	*issues = append(*issues, *foundIssues...)
 
 	if r.dry {
 		for _, issue := range *foundIssues {
@@ -78,13 +90,11 @@ func (r Cli) Execute(path string) error {
 		content = strings.Replace(content, issue.ExtractedLine, updatedLine, 1)
 	}
 
-	// Todo: Optimally the service.Notify should be called after all issues are submitted and files are updated -> https://github.com/deni1688/gogie/issues/29
-	fmt.Printf("\n")
-	if err = r.service.Notify(foundIssues); err != nil {
+	if err = os.WriteFile(path, []byte(content), 0644); err != nil {
 		return err
 	}
 
-	return os.WriteFile(path, []byte(content), 0644)
+	return nil
 }
 
 func getCurrentRepoName() (string, error) {
@@ -103,7 +113,7 @@ func getCurrentRepoName() (string, error) {
 	return matches[1], nil
 }
 
-func (r Cli) ExecuteConcurrently(path string) error {
+func (r Cli) executeConcurrently(path, repoName string, issues *[]issues.Issue) error {
 	var err error
 	var files []os.DirEntry
 
@@ -121,7 +131,7 @@ func (r Cli) ExecuteConcurrently(path string) error {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				return r.Execute(path + "/" + de.Name())
+				return r.execute(path+"/"+de.Name(), repoName, issues)
 			}
 		})
 	}
