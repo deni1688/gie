@@ -3,11 +3,13 @@ package infra
 import (
 	"context"
 	"deni1688/gogie/internal/issues"
+	"errors"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -22,8 +24,7 @@ func NewCli(service issues.Service, dry bool) *Cli {
 }
 
 func (r Cli) Execute(path string) error {
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	origin, err := cmd.Output()
+	repoName, err := getCurrentRepoName()
 	if err != nil {
 		return err
 	}
@@ -52,7 +53,6 @@ func (r Cli) Execute(path string) error {
 	}
 	f.Close()
 
-	name := string(origin)
 	content := string(b)
 	foundIssues, err := r.service.ExtractIssues(&content, &path)
 	if len(*foundIssues) < 1 {
@@ -67,7 +67,7 @@ func (r Cli) Execute(path string) error {
 		return nil
 	}
 
-	repo, err := r.service.FindRepoByName(name)
+	repo, err := r.service.FindRepoByName(repoName)
 	for _, issue := range *foundIssues {
 		fmt.Printf("\n")
 		if err = r.service.SubmitIssue(repo, &issue); err != nil {
@@ -85,6 +85,22 @@ func (r Cli) Execute(path string) error {
 	}
 
 	return os.WriteFile(path, []byte(content), 0644)
+}
+
+func getCurrentRepoName() (string, error) {
+	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
+	res, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	re := regexp.MustCompile(`/(.*)\.git`)
+	matches := re.FindStringSubmatch(string(res))
+	if matches == nil {
+		return "", errors.New("could not find current repo name")
+	}
+
+	return matches[1], nil
 }
 
 func (r Cli) ExecuteConcurrently(path string) error {

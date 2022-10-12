@@ -33,9 +33,8 @@ func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 }
 
 func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
-	regx, err := regexp.Compile(r.prefix + "(.*)\n")
-
 	var issues []Issue
+	regx, err := regexp.Compile(r.prefix + "(.*)\n")
 	if err != nil {
 		return nil, err
 	}
