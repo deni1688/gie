@@ -23,21 +23,25 @@ func NewCli(service issues.Service, dry bool, repoName string) *Cli {
 
 func (r Cli) Execute(path string) error {
 	allIssues := make([]issues.Issue, 0)
-	if err := r.handlePath(path, &allIssues); err != nil {
+	issueChan := make(chan issues.Issue)
+
+	if err := r.handlePath(path, &issueChan); err != nil {
 		return err
 	}
+
+	allIssues = append(allIssues, <-issueChan)
 
 	return r.service.Notify(&allIssues)
 }
 
-func (r Cli) handlePath(path string, allIssues *[]issues.Issue) error {
+func (r Cli) handlePath(path string, issueChan *chan issues.Issue) error {
 	inf, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
 
 	if inf.IsDir() {
-		if err = r.handleDirPath(path, r.repoName, allIssues); err != nil {
+		if err = r.handleDirPath(path, r.repoName, issueChan); err != nil {
 			return err
 		}
 		return nil
@@ -63,7 +67,6 @@ func (r Cli) handlePath(path string, allIssues *[]issues.Issue) error {
 		return nil
 	}
 
-	*allIssues = append(*allIssues, *foundIssues...)
 	if r.dry {
 		for _, issue := range *foundIssues {
 			fmt.Printf("Found issue=[%s] in file=[%s]\n", issue.Title, path)
@@ -71,6 +74,13 @@ func (r Cli) handlePath(path string, allIssues *[]issues.Issue) error {
 
 		return nil
 	}
+
+	for _, issue := range *foundIssues {
+		*issueChan <- issue
+	}
+
+	<-r.ctx.Done()
+	close(*issueChan)
 
 	repo, err := r.service.FindRepoByName(r.repoName)
 	for _, issue := range *foundIssues {
@@ -88,7 +98,7 @@ func (r Cli) handlePath(path string, allIssues *[]issues.Issue) error {
 	return os.WriteFile(path, []byte(content), 0600)
 }
 
-func (r Cli) handleDirPath(path, repoName string, allIssues *[]issues.Issue) error {
+func (r Cli) handleDirPath(path, repoName string, issueChan *chan issues.Issue) error {
 	var err error
 	var files []os.DirEntry
 
@@ -107,7 +117,7 @@ func (r Cli) handleDirPath(path, repoName string, allIssues *[]issues.Issue) err
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				return r.handlePath(path+"/"+dirEntry.Name(), allIssues)
+				return r.handlePath(path+"/"+dirEntry.Name(), issueChan)
 			}
 		})
 	}
