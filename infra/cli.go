@@ -11,39 +11,66 @@ import (
 )
 
 type Cli struct {
-	service  issues.Service
 	dry      bool
 	repoName string
+	service  issues.Service
 	ctx      context.Context
 }
 
 func NewCli(service issues.Service, dry bool, repoName string) *Cli {
-	return &Cli{service, dry, repoName, context.Background()}
+	return &Cli{dry, repoName, service, context.Background()}
 }
 
 func (r Cli) Execute(path string) error {
+	fmt.Println("Starting...")
 	allIssues := make([]issues.Issue, 0)
-	issueChan := make(chan issues.Issue)
+	issueCh := make(chan issues.Issue)
 
-	if err := r.handlePath(path, &issueChan); err != nil {
+	g, ctx := errgroup.WithContext(r.ctx)
+	g.Go(func() error {
+		defer close(issueCh)
+		select {
+		case <-ctx.Done():
+			fmt.Println("Context done")
+			return ctx.Err()
+		default:
+			return r.handlePath(path, &issueCh)
+		}
+	})
+
+	g.Go(func() error {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Context done")
+			return ctx.Err()
+		default:
+			for issue := range issueCh {
+				allIssues = append(allIssues, issue)
+			}
+
+			return nil
+		}
+	})
+	if err := g.Wait(); err != nil {
 		return err
 	}
 
-	allIssues = append(allIssues, <-issueChan)
+	fmt.Printf("Found %d issues\n", len(allIssues))
 
 	return r.service.Notify(&allIssues)
 }
 
-func (r Cli) handlePath(path string, issueChan *chan issues.Issue) error {
+func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 	inf, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
 
 	if inf.IsDir() {
-		if err = r.handleDirPath(path, r.repoName, issueChan); err != nil {
+		if err = r.handleDirPath(path, r.repoName, issueCh); err != nil {
 			return err
 		}
+
 		return nil
 	}
 
@@ -62,29 +89,26 @@ func (r Cli) handlePath(path string, issueChan *chan issues.Issue) error {
 	}
 
 	content := string(b)
-	foundIssues, err := r.service.ExtractIssues(&content, &path)
-	if len(*foundIssues) < 1 {
+	found, err := r.service.ExtractIssues(&content, &path)
+	if err != nil {
+		return err
+	}
+
+	if len(*found) < 1 {
 		return nil
+	}
+
+	for _, issue := range *found {
+		*issueCh <- issue
+		fmt.Printf("Found issue=[%s] in file=[%s]\n", issue.Title, path)
 	}
 
 	if r.dry {
-		for _, issue := range *foundIssues {
-			fmt.Printf("Found issue=[%s] in file=[%s]\n", issue.Title, path)
-		}
-
 		return nil
 	}
 
-	for _, issue := range *foundIssues {
-		*issueChan <- issue
-	}
-
-	<-r.ctx.Done()
-	close(*issueChan)
-
 	repo, err := r.service.FindRepoByName(r.repoName)
-	for _, issue := range *foundIssues {
-		fmt.Printf("\n")
+	for _, issue := range *found {
 		if err = r.service.SubmitIssue(repo, issue); err != nil {
 			return err
 		}
@@ -98,7 +122,7 @@ func (r Cli) handlePath(path string, issueChan *chan issues.Issue) error {
 	return os.WriteFile(path, []byte(content), 0600)
 }
 
-func (r Cli) handleDirPath(path, repoName string, issueChan *chan issues.Issue) error {
+func (r Cli) handleDirPath(path, repoName string, issueCh *chan issues.Issue) error {
 	var err error
 	var files []os.DirEntry
 
@@ -112,19 +136,16 @@ func (r Cli) handleDirPath(path, repoName string, issueChan *chan issues.Issue) 
 
 	for _, de := range files {
 		dirEntry := de
+
 		g.Go(func() error {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				return r.handlePath(path+"/"+dirEntry.Name(), issueChan)
+				return r.handlePath(path+"/"+dirEntry.Name(), issueCh)
 			}
 		})
 	}
 
-	if err = g.Wait(); err != nil {
-		return err
-	}
-
-	return nil
+	return g.Wait()
 }
