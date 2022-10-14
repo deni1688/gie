@@ -13,10 +13,11 @@ type service struct {
 	gitProvider GitProvider
 	notifier    Notifier
 	prefix      string
+	logger      Logger
 }
 
-func New(gitProvider GitProvider, notifier Notifier, prefix string) Service {
-	return &service{gitProvider, notifier, prefix}
+func New(gitProvider GitProvider, notifier Notifier, prefix string, logger Logger) Service {
+	return &service{gitProvider, notifier, prefix, logger}
 }
 
 func (r service) listRepos() (*[]Repo, error) {
@@ -24,11 +25,11 @@ func (r service) listRepos() (*[]Repo, error) {
 }
 
 func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
-	fmt.Printf("Submitting issue=[%s] to repo=[%s]\n", issue.Title, repo.Name)
+	r.logger.Info(fmt.Sprintf("Submitting issue=[%s] to repo=[%s]\n", issue.Title, repo.Name))
 	if err := r.gitProvider.CreateIssue(repo, issue); err != nil {
-		return err
+		return r.logger.Error(err, "failed to create issue")
 	}
-	fmt.Printf("Issue created at url=[%s]\n", issue.Url)
+	r.logger.Info(fmt.Sprintf("Issue created at url=[%s]\n", issue.Url))
 
 	return nil
 }
@@ -36,7 +37,7 @@ func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	regx, err := regexp.Compile(r.prefix + "(.*)\n")
 	if err != nil {
-		return nil, err
+		return nil, r.logger.Error(err, "failed to compile regex with provided prefix")
 	}
 
 	var issues []Issue
@@ -76,7 +77,7 @@ func (r service) GetUpdatedLine(issue Issue) string {
 func (r service) FindRepoByName(name string) (*Repo, error) {
 	repos, err := r.listRepos()
 	if err != nil {
-		return &Repo{}, err
+		return &Repo{}, r.logger.Error(err, "no repos found")
 	}
 
 	if len(*repos) < 1 {
@@ -91,9 +92,12 @@ func (r service) FindRepoByName(name string) (*Repo, error) {
 	}
 
 	return &Repo{}, fmt.Errorf("repo=[%s] not found", name)
-
 }
 
 func (r service) Notify(issues *[]Issue) error {
-	return r.notifier.Notify(issues)
+	if err := r.notifier.Notify(issues); err != nil {
+		return r.logger.Error(err, "failed to notify")
+	}
+
+	return nil
 }

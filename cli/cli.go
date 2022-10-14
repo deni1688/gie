@@ -21,6 +21,7 @@ func New(service issues.Service, dry bool, repoName string) *Cli {
 	return &Cli{dry, repoName, service, context.Background()}
 }
 
+// Issue: Make recursive search through dir thread safe -> closes https://github.com/deni1688/gie/issues/41
 func (r Cli) Execute(path string) error {
 	fmt.Println("Searching...")
 

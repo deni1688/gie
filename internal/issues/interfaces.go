@@ -9,6 +9,11 @@ type Notifier interface {
 	Notify(issues *[]Issue) error
 }
 
+type Logger interface {
+	Error(err error, content ...any) error
+	Info(content ...any)
+}
+
 type Service interface {
 	ExtractIssues(content, source *string) (*[]Issue, error)
 	FindRepoByName(name string) (*Repo, error)
