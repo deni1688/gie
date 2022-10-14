@@ -22,38 +22,30 @@ func NewCli(service issues.Service, dry bool, repoName string) *Cli {
 }
 
 func (r Cli) Execute(path string) error {
-	fmt.Println("Starting...")
+	fmt.Println("Searching...")
+
 	allIssues := make([]issues.Issue, 0)
 	issueCh := make(chan issues.Issue)
 
-	g, ctx := errgroup.WithContext(r.ctx)
-	g.Go(func() error {
+	doneCh := make(chan struct{})
+	defer close(doneCh)
+
+	var err error
+	go func() {
 		defer close(issueCh)
-		select {
-		case <-ctx.Done():
-			fmt.Println("Context done")
-			return ctx.Err()
-		default:
-			return r.handlePath(path, &issueCh)
+		if err = r.handlePath(path, &issueCh); err != nil {
+			return
 		}
-	})
+	}()
 
-	g.Go(func() error {
-		select {
-		case <-ctx.Done():
-			fmt.Println("Context done")
-			return ctx.Err()
-		default:
-			for issue := range issueCh {
-				allIssues = append(allIssues, issue)
-			}
-
-			return nil
+	go func() {
+		for issue := range issueCh {
+			allIssues = append(allIssues, issue)
 		}
-	})
-	if err := g.Wait(); err != nil {
-		return err
-	}
+
+		doneCh <- struct{}{}
+	}()
+	<-doneCh
 
 	fmt.Printf("Found %d issues\n", len(allIssues))
 
@@ -98,15 +90,6 @@ func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 		return nil
 	}
 
-	for _, issue := range *found {
-		*issueCh <- issue
-		fmt.Printf("Found issue=[%s] in file=[%s]\n", issue.Title, path)
-	}
-
-	if r.dry {
-		return nil
-	}
-
 	repo, err := r.service.FindRepoByName(r.repoName)
 	for _, issue := range *found {
 		if err = r.service.SubmitIssue(repo, issue); err != nil {
@@ -117,6 +100,12 @@ func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 			content,
 			issue.ExtractedLine,
 			r.service.GetUpdatedLine(issue), 1)
+
+		*issueCh <- issue
+	}
+
+	if r.dry {
+		return nil
 	}
 
 	return os.WriteFile(path, []byte(content), 0600)
@@ -131,6 +120,7 @@ func (r Cli) handleDirPath(path, repoName string, issueCh *chan issues.Issue) er
 		return err
 	}
 
+	// Issue: Find best way to do recursive concurrency with errgroup -> closes
 	g, ctx := errgroup.WithContext(r.ctx)
 	g.SetLimit(15)
 

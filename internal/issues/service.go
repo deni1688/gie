@@ -26,19 +26,18 @@ func (r service) SubmitIssue(repo *Repo, issue Issue) error {
 	if err := r.gitProvider.CreateIssue(repo, &issue); err != nil {
 		return err
 	}
-
 	fmt.Printf("Issue created at url=[%s]\n", issue.Url)
 
 	return nil
 }
 
 func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
-	var issues []Issue
 	regx, err := regexp.Compile(r.prefix + "(.*)\n")
 	if err != nil {
 		return nil, err
 	}
 
+	var issues []Issue
 	issuesMap := make(map[string]Issue)
 	if strings.Contains(*content, r.prefix) {
 		foundIssues := regx.FindAllString(*content, -1)
@@ -74,6 +73,12 @@ func (r service) FindRepoByName(name string) (*Repo, error) {
 	if err != nil {
 		return &Repo{}, err
 	}
+
+	if len(*repos) < 1 {
+		return &Repo{}, fmt.Errorf("no repos found")
+	}
+
+	fmt.Println(len(*repos))
 
 	var current Repo
 	base := path.Base(name)
