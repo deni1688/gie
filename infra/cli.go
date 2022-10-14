@@ -92,8 +92,10 @@ func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 
 	repo, err := r.service.FindRepoByName(r.repoName)
 	for _, issue := range *found {
-		if err = r.service.SubmitIssue(repo, issue); err != nil {
-			return err
+		if !r.dry {
+			if err = r.service.SubmitIssue(repo, issue); err != nil {
+				return err
+			}
 		}
 
 		content = strings.Replace(
