@@ -1,14 +1,25 @@
 package main
 
 import (
-	"deni1688/gie/infra"
+	"deni1688/gie/cli"
+	"deni1688/gie/common"
+	"deni1688/gie/config"
+	"deni1688/gie/github"
+	"deni1688/gie/gitlab"
 	"deni1688/gie/internal/issues"
+	"deni1688/gie/webhook"
 	"flag"
 	"fmt"
 	"net/http"
 	"os/exec"
 	"regexp"
 	"strings"
+)
+
+// Supported hosts
+const (
+	GITHUB = "github"
+	GITLAB = "gitlab"
 )
 
 func main() {
@@ -30,7 +41,7 @@ func main() {
 		return
 	}
 
-	c := new(config)
+	c := new(config.Config)
 	if *setup {
 		if err = c.Setup(); err != nil {
 			fmt.Println(err)
@@ -54,21 +65,22 @@ func main() {
 		return
 	}
 
-	notifier := infra.NewWebhookNotifier(c.WebHooks, http.DefaultClient)
-	service := issues.NewService(provider, notifier, c.Prefix)
-	cli := infra.NewCli(service, *dry, repoName)
+	logger := common.Logger{}
+	notifier := webhook.New(c.WebHooks, http.DefaultClient)
+	service := issues.New(provider, notifier, c.Prefix, logger)
+	cliApp := cli.New(service, *dry, repoName)
 
-	if err = cli.Execute(*path); err != nil {
+	if err = cliApp.Execute(*path); err != nil {
 		fmt.Println("Error running cli:", err)
 	}
 }
 
-func newGitProvider(c *config) (issues.GitProvider, error) {
+func newGitProvider(c *config.Config) (issues.GitProvider, error) {
 	switch {
-	case strings.Contains(c.Host, "gitlab"):
-		return infra.NewGitlab(c.Token, c.Host, c.Query, http.DefaultClient), nil
-	case strings.Contains(c.Host, "github"):
-		return infra.NewGithub(c.Token, c.Host, c.Query, http.DefaultClient), nil
+	case strings.Contains(c.Host, GITLAB):
+		return gitlab.New(c.Token, c.Host, c.Query, http.DefaultClient), nil
+	case strings.Contains(c.Host, GITHUB):
+		return github.New(c.Token, c.Host, c.Query, http.DefaultClient), nil
 	default:
 		return nil, fmt.Errorf("invalid provider %s", c.Host)
 	}

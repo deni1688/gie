@@ -1,7 +1,8 @@
-package infra
+package github
 
 import (
 	"bytes"
+	"deni1688/gie/common"
 	"deni1688/gie/internal/issues"
 	"encoding/json"
 	"fmt"
@@ -13,11 +14,11 @@ type github struct {
 	token  string
 	host   string
 	query  string
-	client HttpClient
+	client common.HttpClient
 	repos  *[]issues.Repo
 }
 
-func NewGithub(token string, host string, query string, client HttpClient) issues.GitProvider {
+func New(token string, host string, query string, client common.HttpClient) issues.GitProvider {
 	return &github{token, host, query, client, nil}
 }
 
@@ -57,7 +58,7 @@ func (r github) GetRepos() (*[]issues.Repo, error) {
 		return nil, err
 	}
 
-	repos := make([]issues.Repo, len(githubRepos))
+	repos := make([]issues.Repo, 0)
 	for _, repo := range githubRepos {
 		repos = append(repos, issues.Repo{ID: repo.ID, Name: repo.Name, Owner: repo.Owner.Login})
 	}
