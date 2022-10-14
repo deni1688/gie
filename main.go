@@ -2,7 +2,6 @@ package main
 
 import (
 	"deni1688/gie/cli"
-	"deni1688/gie/common"
 	"deni1688/gie/config"
 	"deni1688/gie/github"
 	"deni1688/gie/gitlab"
@@ -65,9 +64,8 @@ func main() {
 		return
 	}
 
-	logger := common.Logger{}
 	notifier := webhook.New(c.WebHooks, http.DefaultClient)
-	service := issues.New(provider, notifier, c.Prefix, logger)
+	service := issues.New(provider, notifier, c.Prefix)
 	cliApp := cli.New(service, *dry, repoName)
 
 	if err = cliApp.Execute(*path); err != nil {

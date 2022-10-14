@@ -13,11 +13,10 @@ type service struct {
 	gitProvider GitProvider
 	notifier    Notifier
 	prefix      string
-	logger      Logger
 }
 
-func New(gitProvider GitProvider, notifier Notifier, prefix string, logger Logger) Service {
-	return &service{gitProvider, notifier, prefix, logger}
+func New(gitProvider GitProvider, notifier Notifier, prefix string) Service {
+	return &service{gitProvider, notifier, prefix}
 }
 
 func (r service) listRepos() (*[]Repo, error) {
@@ -25,11 +24,11 @@ func (r service) listRepos() (*[]Repo, error) {
 }
 
 func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
-	r.logger.Info(fmt.Sprintf("Submitting issue=[%s] to repo=[%s]\n", issue.Title, repo.Name))
+	fmt.Printf("Submitting issue=[%s] to repo=[%s]\n", issue.Title, repo.Name)
 	if err := r.gitProvider.CreateIssue(repo, issue); err != nil {
-		return r.logger.Error(err, "failed to create issue")
+		return fmt.Errorf("failed to create issue for repo=[%s] with error=[%s]", repo.Name, err)
 	}
-	r.logger.Info(fmt.Sprintf("Issue created at url=[%s]\n", issue.Url))
+	fmt.Printf("Issue created at url=[%s]\n", issue.Url)
 
 	return nil
 }
@@ -37,7 +36,7 @@ func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	regx, err := regexp.Compile(r.prefix + "(.*)\n")
 	if err != nil {
-		return nil, r.logger.Error(err, "failed to compile regex with provided prefix")
+		return nil, fmt.Errorf("failed to compile regex with provided prefix=[%s] with error=[%s]", r.prefix, err)
 	}
 
 	var issues []Issue
@@ -77,7 +76,7 @@ func (r service) GetUpdatedLine(issue Issue) string {
 func (r service) FindRepoByName(name string) (*Repo, error) {
 	repos, err := r.listRepos()
 	if err != nil {
-		return &Repo{}, r.logger.Error(err, "no repos found")
+		return &Repo{}, fmt.Errorf("failed to list repos with error=[%s]", err)
 	}
 
 	if len(*repos) < 1 {
@@ -96,7 +95,7 @@ func (r service) FindRepoByName(name string) (*Repo, error) {
 
 func (r service) Notify(issues *[]Issue) error {
 	if err := r.notifier.Notify(issues); err != nil {
-		return r.logger.Error(err, "failed to notify")
+		return fmt.Errorf("failed to notify with error=[%s]", err)
 	}
 
 	return nil
