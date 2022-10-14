@@ -1,7 +1,8 @@
-package infra
+package github
 
 import (
 	"bytes"
+	"deni1688/gie/common"
 	"deni1688/gie/internal/issues"
 	"encoding/json"
 	"fmt"
@@ -13,11 +14,11 @@ type github struct {
 	token  string
 	host   string
 	query  string
-	client HttpClient
+	client common.HttpClient
 	repos  *[]issues.Repo
 }
 
-func NewGithub(token string, host string, query string, client HttpClient) issues.GitProvider {
+func New(token string, host string, query string, client common.HttpClient) issues.GitProvider {
 	return &github{token, host, query, client, nil}
 }
 

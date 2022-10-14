@@ -1,4 +1,4 @@
-package infra
+package cli
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type Cli struct {
 	ctx      context.Context
 }
 
-func NewCli(service issues.Service, dry bool, repoName string) *Cli {
+func New(service issues.Service, dry bool, repoName string) *Cli {
 	return &Cli{dry, repoName, service, context.Background()}
 }
 
@@ -47,11 +47,12 @@ func (r Cli) Execute(path string) error {
 	}()
 	<-doneCh
 
-	fmt.Printf("Found %d issues\n", len(allIssues))
+	fmt.Printf("Found %d issue(s)\n", len(allIssues))
 
 	return r.service.Notify(&allIssues)
 }
 
+// Issue: Ignore private files and dirs (e.g. .git, .idea, etc) -> closes https://github.com/deni1688/gie/issues/39
 func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 	inf, err := os.Stat(path)
 	if err != nil {
@@ -91,19 +92,25 @@ func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 	}
 
 	repo, err := r.service.FindRepoByName(r.repoName)
+	if err != nil {
+		return err
+	}
+
 	for _, issue := range *found {
-		if !r.dry {
-			if err = r.service.SubmitIssue(repo, issue); err != nil {
-				return err
-			}
+		*issueCh <- issue
+		fmt.Printf("Found issue=[%s] in path=[%s]\n", issue.Title, path)
+		if r.dry {
+			continue
+		}
+
+		if err = r.service.SubmitIssue(repo, &issue); err != nil {
+			return err
 		}
 
 		content = strings.Replace(
 			content,
 			issue.ExtractedLine,
 			r.service.GetUpdatedLine(issue), 1)
-
-		*issueCh <- issue
 	}
 
 	if r.dry {
@@ -122,7 +129,7 @@ func (r Cli) handleDirPath(path, repoName string, issueCh *chan issues.Issue) er
 		return err
 	}
 
-	// Issue: Find best way to do recursive concurrency with errgroup -> closes
+	// Issue: Find the best way to do recursive concurrency with errgroup -> closes https://github.com/deni1688/gie/issues/40
 	g, ctx := errgroup.WithContext(r.ctx)
 	g.SetLimit(15)
 

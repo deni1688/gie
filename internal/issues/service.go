@@ -7,13 +7,15 @@ import (
 	"strings"
 )
 
+const LABEL = "-> closes"
+
 type service struct {
 	gitProvider GitProvider
 	notifier    Notifier
 	prefix      string
 }
 
-func NewService(gitProvider GitProvider, notifier Notifier, prefix string) Service {
+func New(gitProvider GitProvider, notifier Notifier, prefix string) Service {
 	return &service{gitProvider, notifier, prefix}
 }
 
@@ -21,9 +23,9 @@ func (r service) listRepos() (*[]Repo, error) {
 	return r.gitProvider.GetRepos()
 }
 
-func (r service) SubmitIssue(repo *Repo, issue Issue) error {
+func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 	fmt.Printf("Submitting issue=[%s] to repo=[%s]\n", issue.Title, repo.Name)
-	if err := r.gitProvider.CreateIssue(repo, &issue); err != nil {
+	if err := r.gitProvider.CreateIssue(repo, issue); err != nil {
 		return err
 	}
 	fmt.Printf("Issue created at url=[%s]\n", issue.Url)
@@ -42,7 +44,7 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	if strings.Contains(*content, r.prefix) {
 		foundIssues := regx.FindAllString(*content, -1)
 		for _, title := range foundIssues {
-			if strings.Contains(title, " -> closes ") || issuesMap[title] != (Issue{}) {
+			if strings.Contains(title, LABEL) || issuesMap[title] != (Issue{}) {
 				continue
 			}
 
@@ -65,7 +67,10 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 }
 
 func (r service) GetUpdatedLine(issue Issue) string {
-	return fmt.Sprintf("%s -> closes %s\n", strings.Trim(issue.ExtractedLine, "\n"), issue.Url)
+	return fmt.Sprintf("%s %s %s\n",
+		strings.Trim(issue.ExtractedLine, "\n"),
+		LABEL,
+		issue.Url)
 }
 
 func (r service) FindRepoByName(name string) (*Repo, error) {
@@ -78,14 +83,10 @@ func (r service) FindRepoByName(name string) (*Repo, error) {
 		return &Repo{}, fmt.Errorf("no repos found")
 	}
 
-	fmt.Println(len(*repos))
-
-	var current Repo
 	base := path.Base(name)
 	for _, repo := range *repos {
 		if strings.Contains(base, repo.Name) {
-			current = repo
-			return &current, nil
+			return &repo, nil
 		}
 	}
 

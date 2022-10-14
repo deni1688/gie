@@ -1,7 +1,8 @@
-package infra
+package webhook
 
 import (
 	"bytes"
+	"deni1688/gie/common"
 	"deni1688/gie/internal/issues"
 	"encoding/json"
 	"fmt"
@@ -10,10 +11,10 @@ import (
 
 type webhookNotifier struct {
 	webhooks []string
-	client   HttpClient
+	client   common.HttpClient
 }
 
-func NewWebhookNotifier(webhooks []string, client HttpClient) issues.Notifier {
+func New(webhooks []string, client common.HttpClient) issues.Notifier {
 	return &webhookNotifier{webhooks, client}
 }
 

@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type config struct {
+type Config struct {
 	Host     string   `json:"host"`
 	Token    string   `json:"token"`
 	Prefix   string   `json:"prefix"`
@@ -15,7 +15,7 @@ type config struct {
 	WebHooks []string `json:"webhooks"`
 }
 
-func (r *config) Load(customPath string) error {
+func (r *Config) Load(customPath string) error {
 	var p string
 	if customPath != "" {
 		if !strings.Contains(customPath, ".json") {
@@ -24,7 +24,7 @@ func (r *config) Load(customPath string) error {
 
 		p = customPath
 	} else {
-		p = os.Getenv("HOME") + "/.config/gie.json"
+		p = defaultConfigPath()
 	}
 
 	file, err := os.Open(p)
@@ -40,23 +40,26 @@ func (r *config) Load(customPath string) error {
 	return nil
 }
 
-func (r *config) Setup() error {
-	defaultConfigPath := os.Getenv("HOME") + "/.config/gie.json"
-
-	if _, err := os.Stat(defaultConfigPath); err == nil {
-		return fmt.Errorf("config file already exists at %s", defaultConfigPath)
+func (r *Config) Setup() error {
+	configPath := defaultConfigPath()
+	if _, err := os.Stat(configPath); err == nil {
+		return fmt.Errorf("config file already exists at %s", configPath)
 	}
 
-	file, err := os.Create(defaultConfigPath)
+	file, err := os.Create(configPath)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Creating config file at %s. Navigate to the file and fill in the details.\n", defaultConfigPath)
+	fmt.Printf("Creating config file at %s. Navigate to the file and fill in the details.\n", configPath)
 
 	if err = json.NewEncoder(file).Encode(r); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func defaultConfigPath() string {
+	return os.Getenv("HOME") + "/.config/gie.json"
 }

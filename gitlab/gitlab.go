@@ -1,7 +1,8 @@
-package infra
+package gitlab
 
 import (
 	"bytes"
+	"deni1688/gie/common"
 	"deni1688/gie/internal/issues"
 	"encoding/json"
 	"fmt"
@@ -13,7 +14,7 @@ type gitlab struct {
 	token  string
 	host   string
 	query  string
-	client HttpClient
+	client common.HttpClient
 	repos  *[]issues.Repo
 }
 
@@ -24,7 +25,7 @@ type gitlabIssue struct {
 	WebUrl string `json:"web_url"`
 }
 
-func NewGitlab(token, host, query string, client HttpClient) issues.GitProvider {
+func New(token, host, query string, client common.HttpClient) issues.GitProvider {
 	return &gitlab{token, host, query, client, nil}
 }
 
