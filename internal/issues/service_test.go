@@ -117,7 +117,36 @@ func Test_service_FindRepoByName(t *testing.T) {
 		want    *Repo
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should return a repo if found",
+			fields: fields{
+				gitProvider: &mockGitProvider{
+					repos: []Repo{{ID: 1, Name: "repo1", Owner: "owner1"}},
+				},
+				notifier: &mockNotifier{},
+				prefix:   "prefix",
+			},
+			args: args{
+				name: "repo1",
+			},
+			want:    &Repo{ID: 1, Name: "repo1", Owner: "owner1"},
+			wantErr: false,
+		},
+		{
+			name: "should return an error if not found",
+			fields: fields{
+				gitProvider: &mockGitProvider{
+					repos: []Repo{{ID: 1, Name: "repo1", Owner: "owner1"}},
+				},
+				notifier: &mockNotifier{},
+				prefix:   "prefix",
+			},
+			args: args{
+				name: "repo2",
+			},
+			want:    &Repo{},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
