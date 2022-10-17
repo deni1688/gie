@@ -19,10 +19,6 @@ func New(gitProvider GitProvider, notifier Notifier, prefix string) Service {
 	return &service{gitProvider, notifier, prefix}
 }
 
-func (r service) listRepos() (*[]Repo, error) {
-	return r.gitProvider.GetRepos()
-}
-
 func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 	fmt.Printf("Submitting issue=[%s] to repo=[%s]\n", issue.Title, repo.Name)
 	if err := r.gitProvider.CreateIssue(repo, issue); err != nil {
@@ -40,11 +36,11 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	}
 
 	issues := make([]Issue, 0)
-	issuesMap := make(map[string]Issue)
+	seenIssues := make(map[string]bool)
 	if strings.Contains(*content, r.prefix) {
 		foundIssues := regx.FindAllString(*content, -1)
 		for _, title := range foundIssues {
-			if strings.Contains(title, LABEL) || issuesMap[title] != (Issue{}) {
+			if strings.Contains(title, LABEL) || seenIssues[title] {
 				continue
 			}
 
@@ -59,7 +55,7 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 			issue.Desc = "Extracted from " + *source
 			issue.ExtractedLine = title
 			issues = append(issues, issue)
-			issuesMap[title] = issue
+			seenIssues[title] = true
 		}
 	}
 
@@ -74,7 +70,7 @@ func (r service) GetUpdatedLine(issue Issue) string {
 }
 
 func (r service) FindRepoByName(name string) (*Repo, error) {
-	repos, err := r.listRepos()
+	repos, err := r.gitProvider.GetRepos()
 	if err != nil {
 		return &Repo{}, fmt.Errorf("failed to list repos with error=[%s]", err)
 	}

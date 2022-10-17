@@ -15,5 +15,4 @@ type Service interface {
 	SubmitIssue(repo *Repo, issue *Issue) error
 	GetUpdatedLine(issue Issue) string
 	Notify(issues *[]Issue) error
-	listRepos() (*[]Repo, error)
 }

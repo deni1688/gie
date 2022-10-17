@@ -87,13 +87,15 @@ func TestServiceExtractIssues(t *testing.T) {
 					// todo: should be ignored
 					return v+1
 				}`
-	contentWithExistingIssue := `// TODO: issue1 -> closes https://gitgub.com/owner/repo/issues/1
-				func inc(v int) int {}`
+	contentWithDuplicateIssues := `// TODO: issue1
+				func inc(v int) int { // TODO: issue1`
+	contentWithExistingIssue := "// TODO: issue1 -> closes https://gitgub.com/owner/repo/issues/1"
+	contentWithEmptyIssueTitle := "// TODO:\n"
 	path := "/path/to/file"
 
 	tests := []test{
 		{
-			name: "return a list of issues extracted from the content",
+			name: "returns a list of issues extracted from the content",
 			fields: fields{
 				gitProvider: &mockGitProvider{},
 				notifier:    &mockNotifier{},
@@ -122,6 +124,28 @@ func TestServiceExtractIssues(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "returns only unique issues in the content",
+			fields: fields{
+				gitProvider: &mockGitProvider{},
+				notifier:    &mockNotifier{},
+				prefix:      "// TODO:",
+			},
+			args: args{
+				content: &contentWithDuplicateIssues,
+				source:  &path,
+			},
+			want: &[]Issue{
+				{
+					ID:            0,
+					Title:         "Issue1",
+					Desc:          "Extracted from /path/to/file",
+					Url:           "",
+					ExtractedLine: "// TODO: issue1\n",
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "skips issues that already have a link",
 			fields: fields{
 				gitProvider: &mockGitProvider{},
@@ -134,6 +158,34 @@ func TestServiceExtractIssues(t *testing.T) {
 			},
 			want:    &[]Issue{},
 			wantErr: false,
+		},
+		{
+			name: "skips issues that result in a empty title",
+			fields: fields{
+				gitProvider: &mockGitProvider{},
+				notifier:    &mockNotifier{},
+				prefix:      "// TODO:",
+			},
+			args: args{
+				content: &contentWithEmptyIssueTitle,
+				source:  &path,
+			},
+			want:    &[]Issue{},
+			wantErr: false,
+		},
+		{
+			name: "returns an error if prefix cannot be compiled in the regex",
+			fields: fields{
+				gitProvider: &mockGitProvider{},
+				notifier:    &mockNotifier{},
+				prefix:      "[",
+			},
+			args: args{
+				content: &contentWithIssuesToExtract,
+				source:  &path,
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -164,13 +216,14 @@ func TestServiceFindRepoByName(t *testing.T) {
 	type args struct {
 		name string
 	}
-	tests := []struct {
+	type test struct {
 		name    string
 		fields  fields
 		args    args
 		want    *Repo
 		wantErr bool
-	}{
+	}
+	tests := []test{
 		{
 			name: "returns a repo if found",
 			fields: fields{
@@ -187,10 +240,41 @@ func TestServiceFindRepoByName(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "returns an error if repo not found",
+			name: "returns an error if repo name is not found",
 			fields: fields{
 				gitProvider: &mockGitProvider{
 					repos: []Repo{{ID: 1, Name: "repo1", Owner: "owner1"}},
+				},
+				notifier: &mockNotifier{},
+				prefix:   "prefix",
+			},
+			args: args{
+				name: "repo2",
+			},
+			want:    &Repo{},
+			wantErr: true,
+		},
+		{
+			name: "returns an error if querying for repos fails",
+			fields: fields{
+				gitProvider: &mockGitProvider{
+					repos: nil,
+					err:   errors.New("invalid repos query"),
+				},
+				notifier: &mockNotifier{},
+				prefix:   "prefix",
+			},
+			args: args{
+				name: "repo2",
+			},
+			want:    &Repo{},
+			wantErr: true,
+		},
+		{
+			name: "returns an error if no repos are found",
+			fields: fields{
+				gitProvider: &mockGitProvider{
+					repos: []Repo{},
 				},
 				notifier: &mockNotifier{},
 				prefix:   "prefix",
@@ -380,69 +464,6 @@ func TestServiceSubmitIssue(t *testing.T) {
 			}
 			if tt.args.issue.Url != tt.wantURL {
 				t.Errorf("SubmitIssue() issue.Url = %v, want %v", tt.args.issue.Url, tt.wantURL)
-			}
-		})
-	}
-}
-
-func TestServiceListRepos(t *testing.T) {
-	mockRepos := []Repo{{ID: 1, Name: "repo1", Owner: "owner1"}}
-	type fields struct {
-		gitProvider GitProvider
-		notifier    Notifier
-		prefix      string
-	}
-	type test struct {
-		name    string
-		fields  fields
-		want    *[]Repo
-		wantErr bool
-	}
-
-	tests := []test{
-		{
-			name: "listRepos returns the repos from the git provider",
-			fields: fields{
-				gitProvider: &mockGitProvider{
-					repos: mockRepos,
-					issue: Issue{},
-					err:   nil,
-				},
-				notifier: &mockNotifier{nil},
-				prefix:   "// test",
-			},
-			want:    &mockRepos,
-			wantErr: false,
-		},
-		{
-			name: "listRepos returns an error if the git provider returns an error",
-			fields: fields{
-				gitProvider: &mockGitProvider{
-					repos: []Repo{},
-					issue: Issue{},
-					err:   errors.New("mock error"),
-				},
-				notifier: &mockNotifier{nil},
-				prefix:   "// test",
-			},
-			want:    &[]Repo{},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := service{
-				gitProvider: tt.fields.gitProvider,
-				notifier:    tt.fields.notifier,
-				prefix:      tt.fields.prefix,
-			}
-			got, err := r.listRepos()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("listRepos() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("listRepos() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
