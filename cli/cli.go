@@ -7,6 +7,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"io"
 	"os"
+	pth "path"
 	"strings"
 )
 
@@ -27,40 +28,45 @@ func (r Cli) Execute(path string) error {
 	allIssues := make([]core.Issue, 0)
 	issueCh := make(chan core.Issue)
 
-	doneCh := make(chan struct{})
-	defer close(doneCh)
+	var g errgroup.Group
 
-	var err error
-	go func() {
+	g.Go(func() error {
 		defer close(issueCh)
-		if err = r.handlePath(path, &issueCh); err != nil {
-			return
-		}
-	}()
+		return r.handlePath(path, &issueCh)
+	})
 
-	go func() {
+	g.Go(func() error {
 		for issue := range issueCh {
 			allIssues = append(allIssues, issue)
 		}
+		return nil
+	})
 
-		doneCh <- struct{}{}
-	}()
-	<-doneCh
+	if err := g.Wait(); err != nil {
+		return err
+	}
 
 	fmt.Printf("Found %d issue(s)\n", len(allIssues))
+
+	if r.dry {
+		return nil
+	}
 
 	return r.service.Notify(&allIssues)
 }
 
-// Issue: Ignore private files and dirs (e.g. .git, .idea, etc) -> closes https://github.com/deni1688/gie/issues/39
 func (r Cli) handlePath(path string, issueCh *chan core.Issue) error {
 	inf, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
 
+	if strings.HasPrefix(pth.Base(path), ".") && path != "." {
+		return nil
+	}
+
 	if inf.IsDir() {
-		if err = r.handleDirPath(path, r.repoName, issueCh); err != nil {
+		if err = r.handleDirPath(path, issueCh); err != nil {
 			return err
 		}
 
@@ -120,7 +126,7 @@ func (r Cli) handlePath(path string, issueCh *chan core.Issue) error {
 	return os.WriteFile(path, []byte(content), 0600)
 }
 
-func (r Cli) handleDirPath(path, repoName string, issueCh *chan core.Issue) error {
+func (r Cli) handleDirPath(path string, issueCh *chan core.Issue) error {
 	var err error
 	var files []os.DirEntry
 
@@ -129,7 +135,6 @@ func (r Cli) handleDirPath(path, repoName string, issueCh *chan core.Issue) erro
 		return err
 	}
 
-	// Issue: Find the best way to do recursive concurrency with errgroup -> closes https://github.com/deni1688/gie/issues/40
 	g, ctx := errgroup.WithContext(r.ctx)
 	g.SetLimit(15)
 
