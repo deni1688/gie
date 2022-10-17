@@ -9,19 +9,18 @@ import (
 
 const LABEL = "-> closes"
 
-type IssueService struct {
+type service struct {
 	gitProvider GitProvider
 	notifier    Notifier
 	prefix      string
 }
 
-// New returns a new issues IssueService
+// New returns a new issues service
 func New(gitProvider GitProvider, notifier Notifier, prefix string) Service {
-	return &IssueService{gitProvider, notifier, prefix}
+	return &service{gitProvider, notifier, prefix}
 }
 
-// SubmitIssue submits an issue to the provided repo using gitProvider
-func (r IssueService) SubmitIssue(repo *Repo, issue *Issue) error {
+func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 	fmt.Printf("Submitting issue=[%s] to repo=[%s]\n", issue.Title, repo.Name)
 	if err := r.gitProvider.CreateIssue(repo, issue); err != nil {
 		return fmt.Errorf("failed to create issue for repo=[%s] with error=[%s]", repo.Name, err)
@@ -31,8 +30,7 @@ func (r IssueService) SubmitIssue(repo *Repo, issue *Issue) error {
 	return nil
 }
 
-// ExtractIssues extracts issues from the provided string content reference and returns a list of issues
-func (r IssueService) ExtractIssues(content, source *string) (*[]Issue, error) {
+func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	regx, err := regexp.Compile(r.prefix + "(.*)\n")
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex with provided prefix=[%s] with error=[%s]", r.prefix, err)
@@ -65,16 +63,14 @@ func (r IssueService) ExtractIssues(content, source *string) (*[]Issue, error) {
 	return &issues, nil
 }
 
-// GetUpdatedLine returns the updated line with the issue ID and URL
-func (r IssueService) GetUpdatedLine(issue Issue) string {
+func (r service) GetUpdatedLine(issue Issue) string {
 	return fmt.Sprintf("%s %s %s\n",
 		strings.Trim(issue.ExtractedLine, "\n"),
 		LABEL,
 		issue.Url)
 }
 
-// FindRepoByName returns a repo if found
-func (r IssueService) FindRepoByName(name string) (*Repo, error) {
+func (r service) FindRepoByName(name string) (*Repo, error) {
 	repos, err := r.gitProvider.GetRepos()
 	if err != nil {
 		return &Repo{}, fmt.Errorf("failed to list repos with error=[%s]", err)
@@ -94,8 +90,7 @@ func (r IssueService) FindRepoByName(name string) (*Repo, error) {
 	return &Repo{}, fmt.Errorf("repo=[%s] not found", name)
 }
 
-// Notify uses the notifier to publish the issues to other interested parties
-func (r IssueService) Notify(issues *[]Issue) error {
+func (r service) Notify(issues *[]Issue) error {
 	if err := r.notifier.Notify(issues); err != nil {
 		return fmt.Errorf("failed to notify with error=[%s]", err)
 	}

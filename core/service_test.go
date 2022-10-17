@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestNew(t *testing.T) {
+func TestServiceNew(t *testing.T) {
 	type args struct {
 		gitProvider GitProvider
 		notifier    Notifier
@@ -20,13 +20,13 @@ func TestNew(t *testing.T) {
 	}
 
 	tt := test{
-		name: "returns a new issues IssueService",
+		name: "returns a new issues service",
 		args: args{
 			gitProvider: &mockGitProvider{},
 			notifier:    &mockNotifier{},
 			prefix:      "prefix",
 		},
-		want: &IssueService{
+		want: &service{
 			gitProvider: &mockGitProvider{},
 			notifier:    &mockNotifier{},
 			prefix:      "prefix",
@@ -166,7 +166,7 @@ func TestServiceExtractIssues(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := IssueService{
+			r := service{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
@@ -264,7 +264,7 @@ func TestServiceFindRepoByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := IssueService{
+			r := service{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
@@ -316,7 +316,7 @@ func TestServiceGetUpdatedLine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := IssueService{
+			r := service{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
@@ -349,7 +349,7 @@ func TestServiceNotify(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := IssueService{
+			r := service{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
@@ -427,7 +427,7 @@ func TestServiceSubmitIssue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := IssueService{
+			r := service{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
