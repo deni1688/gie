@@ -2,7 +2,7 @@ package cli
 
 import (
 	"context"
-	"deni1688/gie/issues"
+	"deni1688/gie/core"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"io"
@@ -13,19 +13,19 @@ import (
 type Cli struct {
 	dry      bool
 	repoName string
-	service  issues.Service
+	service  core.Service
 	ctx      context.Context
 }
 
-func New(service issues.Service, dry bool, repoName string) *Cli {
+func New(service core.Service, dry bool, repoName string) *Cli {
 	return &Cli{dry, repoName, service, context.Background()}
 }
 
 func (r Cli) Execute(path string) error {
 	fmt.Println("Searching...")
 
-	allIssues := make([]issues.Issue, 0)
-	issueCh := make(chan issues.Issue)
+	allIssues := make([]core.Issue, 0)
+	issueCh := make(chan core.Issue)
 
 	doneCh := make(chan struct{})
 	defer close(doneCh)
@@ -53,7 +53,7 @@ func (r Cli) Execute(path string) error {
 }
 
 // Issue: Ignore private files and dirs (e.g. .git, .idea, etc) -> closes https://github.com/deni1688/gie/issues/39
-func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
+func (r Cli) handlePath(path string, issueCh *chan core.Issue) error {
 	inf, err := os.Stat(path)
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 	return os.WriteFile(path, []byte(content), 0600)
 }
 
-func (r Cli) handleDirPath(path, repoName string, issueCh *chan issues.Issue) error {
+func (r Cli) handleDirPath(path, repoName string, issueCh *chan core.Issue) error {
 	var err error
 	var files []os.DirEntry
 

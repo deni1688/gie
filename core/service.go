@@ -1,4 +1,4 @@
-package issues
+package core
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package issues
+package core
 
 type mockGitProvider struct {
 	repos []Repo

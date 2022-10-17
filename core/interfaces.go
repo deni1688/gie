@@ -1,4 +1,4 @@
-package issues
+package core
 
 type GitProvider interface {
 	GetRepos() (*[]Repo, error)

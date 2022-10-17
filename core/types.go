@@ -1,4 +1,4 @@
-package issues
+package core
 
 type Repo struct {
 	ID    int    `json:"id"`
