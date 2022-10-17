@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Issue: Make it possible to define a list of files to ignore -> closes https://github.com/deni1688/gie/issues/43
 type Config struct {
 	Host     string   `json:"host"`
 	Token    string   `json:"token"`
