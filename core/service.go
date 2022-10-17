@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const LABEL = "-> closes"
+const label = "-> closes"
 
 type service struct {
 	gitProvider GitProvider
@@ -41,7 +41,7 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 	if strings.Contains(*content, r.prefix) {
 		foundIssues := regx.FindAllString(*content, -1)
 		for _, title := range foundIssues {
-			if strings.Contains(title, LABEL) || seenIssues[title] {
+			if strings.Contains(title, label) || seenIssues[title] {
 				continue
 			}
 
@@ -66,7 +66,7 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 func (r service) GetUpdatedLine(issue Issue) string {
 	return fmt.Sprintf("%s %s %s\n",
 		strings.Trim(issue.ExtractedLine, "\n"),
-		LABEL,
+		label,
 		issue.Url)
 }
 
