@@ -39,7 +39,7 @@ func (r service) ExtractIssues(content, source *string) (*[]Issue, error) {
 		return nil, fmt.Errorf("failed to compile regex with provided prefix=[%s] with error=[%s]", r.prefix, err)
 	}
 
-	var issues []Issue
+	issues := make([]Issue, 0)
 	issuesMap := make(map[string]Issue)
 	if strings.Contains(*content, r.prefix) {
 		foundIssues := regx.FindAllString(*content, -1)
