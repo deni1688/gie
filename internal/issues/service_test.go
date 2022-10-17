@@ -63,7 +63,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func Test_service_ExtractIssues(t *testing.T) {
+func TestServiceExtractIssues(t *testing.T) {
 	type fields struct {
 		gitProvider GitProvider
 		notifier    Notifier
@@ -73,6 +73,13 @@ func Test_service_ExtractIssues(t *testing.T) {
 		content *string
 		source  *string
 	}
+	content := `// TODO: issue1
+					func test() int { // TODO: issue2
+						// some other content
+                        return 1+1
+					}`
+	s := "/path/to/file"
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -80,7 +87,35 @@ func Test_service_ExtractIssues(t *testing.T) {
 		want    *[]Issue
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should return a list of issues",
+			fields: fields{
+				gitProvider: &mockGitProvider{},
+				notifier:    &mockNotifier{},
+				prefix:      "// TODO:",
+			},
+			args: args{
+				content: &content,
+				source:  &s,
+			},
+			want: &[]Issue{
+				{
+					ID:            0,
+					Title:         "Issue1",
+					Desc:          "Extracted from /path/to/file",
+					Url:           "",
+					ExtractedLine: "// TODO: issue1\n",
+				},
+				{
+					ID:            0,
+					Title:         "Issue2",
+					Desc:          "Extracted from /path/to/file",
+					Url:           "",
+					ExtractedLine: "// TODO: issue2\n",
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -101,7 +136,7 @@ func Test_service_ExtractIssues(t *testing.T) {
 	}
 }
 
-func Test_service_FindRepoByName(t *testing.T) {
+func TestServiceFindRepoByName(t *testing.T) {
 	type fields struct {
 		gitProvider GitProvider
 		notifier    Notifier
@@ -167,7 +202,7 @@ func Test_service_FindRepoByName(t *testing.T) {
 	}
 }
 
-func Test_service_GetUpdatedLine(t *testing.T) {
+func TestServiceGetUpdatedLine(t *testing.T) {
 	type fields struct {
 		gitProvider GitProvider
 		notifier    Notifier
@@ -182,7 +217,23 @@ func Test_service_GetUpdatedLine(t *testing.T) {
 		args   args
 		want   string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should return the extracted line updated with issue link",
+			fields: fields{
+				gitProvider: &mockGitProvider{},
+				notifier:    &mockNotifier{},
+				prefix:      "test",
+			},
+			args: args{
+				issue: Issue{
+					ID:            1212,
+					Title:         "Make code better",
+					Url:           "https://github.com/owner/repo/issues/1212",
+					ExtractedLine: "// TODO: Make code better",
+				},
+			},
+			want: "// TODO: Make code better -> closes https://github.com/owner/repo/issues/1212\n",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -198,7 +249,7 @@ func Test_service_GetUpdatedLine(t *testing.T) {
 	}
 }
 
-func Test_service_Notify(t *testing.T) {
+func TestServiceNotify(t *testing.T) {
 	type fields struct {
 		gitProvider GitProvider
 		notifier    Notifier
@@ -229,7 +280,7 @@ func Test_service_Notify(t *testing.T) {
 	}
 }
 
-func Test_service_SubmitIssue(t *testing.T) {
+func TestServiceSubmitIssue(t *testing.T) {
 	type fields struct {
 		gitProvider GitProvider
 		notifier    Notifier
@@ -261,7 +312,7 @@ func Test_service_SubmitIssue(t *testing.T) {
 	}
 }
 
-func Test_service_listRepos(t *testing.T) {
+func TestServiceListRepos(t *testing.T) {
 	mockRepos := []Repo{{ID: 1, Name: "repo1", Owner: "owner1"}}
 	type fields struct {
 		gitProvider GitProvider
