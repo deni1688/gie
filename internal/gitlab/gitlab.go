@@ -2,8 +2,8 @@ package gitlab
 
 import (
 	"bytes"
-	"deni1688/gie/common"
-	"deni1688/gie/internal/issues"
+	"deni1688/gie/internal/common"
+	"deni1688/gie/issues"
 	"encoding/json"
 	"fmt"
 	"io"

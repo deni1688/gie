@@ -1,12 +1,12 @@
 package main
 
 import (
-	"deni1688/gie/cli"
-	"deni1688/gie/config"
-	"deni1688/gie/github"
-	"deni1688/gie/gitlab"
-	"deni1688/gie/internal/issues"
-	"deni1688/gie/webhook"
+	"deni1688/gie/internal/cli"
+	"deni1688/gie/internal/config"
+	"deni1688/gie/internal/github"
+	"deni1688/gie/internal/gitlab"
+	"deni1688/gie/internal/webhook"
+	"deni1688/gie/issues"
 	"flag"
 	"fmt"
 	"net/http"

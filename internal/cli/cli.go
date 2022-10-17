@@ -2,7 +2,7 @@ package cli
 
 import (
 	"context"
-	"deni1688/gie/internal/issues"
+	"deni1688/gie/issues"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"io"
