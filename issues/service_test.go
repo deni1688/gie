@@ -20,13 +20,13 @@ func TestNew(t *testing.T) {
 	}
 
 	tt := test{
-		name: "returns a new issues service",
+		name: "returns a new issues IssueService",
 		args: args{
 			gitProvider: &mockGitProvider{},
 			notifier:    &mockNotifier{},
 			prefix:      "prefix",
 		},
-		want: &service{
+		want: &IssueService{
 			gitProvider: &mockGitProvider{},
 			notifier:    &mockNotifier{},
 			prefix:      "prefix",
@@ -166,7 +166,7 @@ func TestServiceExtractIssues(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := service{
+			r := IssueService{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
@@ -264,7 +264,7 @@ func TestServiceFindRepoByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := service{
+			r := IssueService{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
@@ -316,7 +316,7 @@ func TestServiceGetUpdatedLine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := service{
+			r := IssueService{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
@@ -349,7 +349,7 @@ func TestServiceNotify(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := service{
+			r := IssueService{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
@@ -427,7 +427,7 @@ func TestServiceSubmitIssue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := service{
+			r := IssueService{
 				gitProvider: tt.fields.gitProvider,
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
