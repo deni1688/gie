@@ -7,32 +7,32 @@ import (
 	"golang.org/x/sync/errgroup"
 	"io"
 	"os"
-	pth "path"
+	"path"
 	"strings"
 )
 
 type Cli struct {
+	exclude  []string
 	dry      bool
 	repoName string
 	service  core.Service
 	ctx      context.Context
 }
 
-func New(service core.Service, dry bool, repoName string) *Cli {
-	return &Cli{dry, repoName, service, context.Background()}
+func New(service core.Service, dry bool, repoName string, exclude []string) *Cli {
+	return &Cli{exclude, dry, repoName, service, context.Background()}
 }
 
-func (r Cli) Execute(path string) error {
+func (r Cli) Execute(pth string) error {
 	fmt.Println("Searching...")
 
 	allIssues := make([]core.Issue, 0)
-	issueCh := make(chan core.Issue)
+	issueCh := make(chan core.Issue, 100)
 
 	var g errgroup.Group
-
 	g.Go(func() error {
 		defer close(issueCh)
-		return r.handlePath(path, &issueCh)
+		return r.handlePath(pth, &issueCh)
 	})
 
 	g.Go(func() error {
@@ -55,25 +55,28 @@ func (r Cli) Execute(path string) error {
 	return r.service.Notify(&allIssues)
 }
 
-func (r Cli) handlePath(path string, issueCh *chan core.Issue) error {
-	inf, err := os.Stat(path)
+func (r Cli) handlePath(pth string, issueCh *chan core.Issue) error {
+	inf, err := os.Stat(pth)
 	if err != nil {
 		return err
 	}
 
-	if strings.HasPrefix(pth.Base(path), ".") && path != "." {
-		return nil
+	base := path.Base(pth)
+	for _, p := range r.exclude {
+		if strings.Contains(base, p) {
+			return nil
+		}
 	}
 
 	if inf.IsDir() {
-		if err = r.handleDirPath(path, issueCh); err != nil {
+		if err = r.handleDirPath(pth, issueCh); err != nil {
 			return err
 		}
 
 		return nil
 	}
 
-	f, err := os.Open(path)
+	f, err := os.Open(pth)
 	if err != nil {
 		return err
 	}
@@ -88,7 +91,7 @@ func (r Cli) handlePath(path string, issueCh *chan core.Issue) error {
 	}
 
 	content := string(b)
-	found, err := r.service.ExtractIssues(&content, &path)
+	found, err := r.service.ExtractIssues(&content, &pth)
 	if err != nil {
 		return err
 	}
@@ -104,7 +107,7 @@ func (r Cli) handlePath(path string, issueCh *chan core.Issue) error {
 
 	for _, issue := range *found {
 		*issueCh <- issue
-		fmt.Printf("Found issue=[%s] in path=[%s]\n", issue.Title, path)
+		fmt.Printf("Found issue=[%s] in pth=[%s]\n", issue.Title, pth)
 		if r.dry {
 			continue
 		}
@@ -123,14 +126,14 @@ func (r Cli) handlePath(path string, issueCh *chan core.Issue) error {
 		return nil
 	}
 
-	return os.WriteFile(path, []byte(content), 0600)
+	return os.WriteFile(pth, []byte(content), 0600)
 }
 
-func (r Cli) handleDirPath(path string, issueCh *chan core.Issue) error {
+func (r Cli) handleDirPath(pth string, issueCh *chan core.Issue) error {
 	var err error
 	var files []os.DirEntry
 
-	files, err = os.ReadDir(path)
+	files, err = os.ReadDir(pth)
 	if err != nil {
 		return err
 	}
@@ -146,7 +149,7 @@ func (r Cli) handleDirPath(path string, issueCh *chan core.Issue) error {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				return r.handlePath(path+"/"+dirEntry.Name(), issueCh)
+				return r.handlePath(pth+"/"+dirEntry.Name(), issueCh)
 			}
 		})
 	}

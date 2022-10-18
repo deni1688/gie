@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-// Issue: Make it possible to define a list of files to ignore -> closes https://github.com/deni1688/gie/issues/43
 type Config struct {
 	Host     string   `json:"host"`
 	Token    string   `json:"token"`
 	Prefix   string   `json:"prefix"`
 	Query    string   `json:"query"`
 	WebHooks []string `json:"webhooks"`
+	Exclude  []string `json:"exclude"`
 }
 
 func (r *Config) Load(customPath string) error {

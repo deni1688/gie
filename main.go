@@ -66,7 +66,7 @@ func main() {
 
 	notifier := webhook.New(c.WebHooks, http.DefaultClient)
 	service := core.New(provider, notifier, c.Prefix)
-	cliApp := cli.New(service, *dry, repoName)
+	cliApp := cli.New(service, *dry, repoName, c.Exclude)
 
 	if err = cliApp.Execute(*path); err != nil {
 		fmt.Println("Error running cli:", err)
