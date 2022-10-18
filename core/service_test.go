@@ -345,7 +345,48 @@ func TestServiceNotify(t *testing.T) {
 	}
 
 	tests := []test{
-		// TODO: Add test cases.
+		{
+			name: "calls the notifer with the provided issues",
+			fields: fields{
+				gitProvider: &mockGitProvider{
+					repos: nil,
+					issue: Issue{},
+					err:   nil,
+				},
+				notifier: mockNotifier{nil},
+				prefix:   "",
+			},
+			args: args{
+				issues: &[]Issue{
+		{
+			ID:            123,
+			Title:         "New Issue",
+			Desc:          "Extacted from xyz/path",
+			Url:           "https://github.com/owner/issues/123",
+			ExtractedLine: "...",
+		},
+		},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "",
+			fields:  fields{
+				gitProvider: &mockGitProvider{
+					repos: nil,
+					issue: Issue{},
+					err:   nil,
+				},
+				notifier: mockNotifier{
+					err:   errors.New("failed to notify"),
+				},
+				prefix:      "",
+			},
+			args:    args{
+				issues: nil,
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -354,6 +395,7 @@ func TestServiceNotify(t *testing.T) {
 				notifier:    tt.fields.notifier,
 				prefix:      tt.fields.prefix,
 			}
+
 			if err := r.Notify(tt.args.issues); (err != nil) != tt.wantErr {
 				t.Errorf("Notify() error = %v, wantErr %v", err, tt.wantErr)
 			}
