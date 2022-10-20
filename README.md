@@ -1,4 +1,3 @@
-[![](https://img.shields.io/github/workflow/status/deni1688/gie?longCache=tru&label=CI&logo=github%20actions&logoColor=fff)](https://github.com/deni1688/gie/actions?query=workflow%3AGo)
-
+[![CI](https://github.com/deni1688/gie/actions/workflows/ci.yml/badge.svg)](https://github.com/deni1688/gie/actions/workflows/ci.yml)
 # gie (git issue extractor)
 cli tool to create multiple issues for a git provider
