@@ -25,7 +25,6 @@ func (r service) SubmitIssue(repo *Repo, issue *Issue) error {
 	if err := r.gitProvider.CreateIssue(repo, issue); err != nil {
 		return fmt.Errorf("failed to create issue for repo=[%s] with error=[%s]", repo.Name, err)
 	}
-	fmt.Printf("Issue created at url=[%s]\n", issue.Url)
 
 	return nil
 }

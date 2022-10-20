@@ -115,6 +115,7 @@ func (r Cli) handlePath(pth string, issueCh *chan core.Issue) error {
 		if err = r.service.SubmitIssue(repo, &issue); err != nil {
 			return err
 		}
+		fmt.Printf("Issue created at url=[%s]\n", issue.Url)
 
 		content = strings.Replace(
 			content,
