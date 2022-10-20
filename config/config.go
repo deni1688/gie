@@ -13,6 +13,7 @@ type Config struct {
 	Prefix   string   `json:"prefix"`
 	Query    string   `json:"query"`
 	WebHooks []string `json:"webhooks"`
+	Exclude  []string `json:"exclude"`
 }
 
 func (r *Config) Load(customPath string) error {

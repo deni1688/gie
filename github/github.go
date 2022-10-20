@@ -3,7 +3,7 @@ package github
 import (
 	"bytes"
 	"deni1688/gie/common"
-	"deni1688/gie/internal/issues"
+	"deni1688/gie/core"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,15 +15,15 @@ type github struct {
 	host   string
 	query  string
 	client common.HttpClient
-	repos  *[]issues.Repo
+	repos  *[]core.Repo
 }
 
-func New(token string, host string, query string, client common.HttpClient) issues.GitProvider {
+func New(token string, host string, query string, client common.HttpClient) core.GitProvider {
 	return &github{token, host, query, client, nil}
 }
 
 type githubRepo struct {
-	*issues.Repo
+	*core.Repo
 	Owner struct {
 		Login string `json:"login"`
 	} `json:"owner"`
@@ -36,7 +36,7 @@ type githubIssue struct {
 	HtmlUrl string `json:"html_url"`
 }
 
-func (r github) GetRepos() (*[]issues.Repo, error) {
+func (r github) GetRepos() (*[]core.Repo, error) {
 	if r.repos != nil {
 		return r.repos, nil
 	}
@@ -58,15 +58,15 @@ func (r github) GetRepos() (*[]issues.Repo, error) {
 		return nil, err
 	}
 
-	repos := make([]issues.Repo, 0)
+	repos := make([]core.Repo, 0)
 	for _, repo := range githubRepos {
-		repos = append(repos, issues.Repo{ID: repo.ID, Name: repo.Name, Owner: repo.Owner.Login})
+		repos = append(repos, core.Repo{ID: repo.ID, Name: repo.Name, Owner: repo.Owner.Login})
 	}
 
 	return &repos, nil
 }
 
-func (r github) CreateIssue(repo *issues.Repo, issue *issues.Issue) error {
+func (r github) CreateIssue(repo *core.Repo, issue *core.Issue) error {
 	req, err := r.request("POST", "/repos/"+repo.Owner+"/"+repo.Name+"/issues")
 	if err != nil {
 		return err

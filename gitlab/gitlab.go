@@ -3,7 +3,7 @@ package gitlab
 import (
 	"bytes"
 	"deni1688/gie/common"
-	"deni1688/gie/internal/issues"
+	"deni1688/gie/core"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,7 +15,7 @@ type gitlab struct {
 	host   string
 	query  string
 	client common.HttpClient
-	repos  *[]issues.Repo
+	repos  *[]core.Repo
 }
 
 type gitlabIssue struct {
@@ -25,11 +25,11 @@ type gitlabIssue struct {
 	WebUrl string `json:"web_url"`
 }
 
-func New(token, host, query string, client common.HttpClient) issues.GitProvider {
+func New(token, host, query string, client common.HttpClient) core.GitProvider {
 	return &gitlab{token, host, query, client, nil}
 }
 
-func (r gitlab) GetRepos() (*[]issues.Repo, error) {
+func (r gitlab) GetRepos() (*[]core.Repo, error) {
 	if r.repos != nil {
 		return r.repos, nil
 	}
@@ -46,7 +46,7 @@ func (r gitlab) GetRepos() (*[]issues.Repo, error) {
 	}
 	defer resp.Body.Close()
 
-	var repos []issues.Repo
+	var repos []core.Repo
 	if err = json.NewDecoder(resp.Body).Decode(&repos); err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (r gitlab) GetRepos() (*[]issues.Repo, error) {
 	return &repos, nil
 }
 
-func (r gitlab) CreateIssue(repo *issues.Repo, issue *issues.Issue) error {
+func (r gitlab) CreateIssue(repo *core.Repo, issue *core.Issue) error {
 	req, err := r.request("POST", fmt.Sprintf("projects/%d/issues", repo.ID))
 	if err != nil {
 		return err

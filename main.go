@@ -3,9 +3,9 @@ package main
 import (
 	"deni1688/gie/cli"
 	"deni1688/gie/config"
+	"deni1688/gie/core"
 	"deni1688/gie/github"
 	"deni1688/gie/gitlab"
-	"deni1688/gie/internal/issues"
 	"deni1688/gie/webhook"
 	"flag"
 	"fmt"
@@ -65,15 +65,15 @@ func main() {
 	}
 
 	notifier := webhook.New(c.WebHooks, http.DefaultClient)
-	service := issues.New(provider, notifier, c.Prefix)
-	cliApp := cli.New(service, *dry, repoName)
+	service := core.New(provider, notifier, c.Prefix)
+	cliApp := cli.New(service, *dry, repoName, c.Exclude)
 
 	if err = cliApp.Execute(*path); err != nil {
 		fmt.Println("Error running cli:", err)
 	}
 }
 
-func newGitProvider(c *config.Config) (issues.GitProvider, error) {
+func newGitProvider(c *config.Config) (core.GitProvider, error) {
 	switch {
 	case strings.Contains(c.Host, GITLAB):
 		return gitlab.New(c.Token, c.Host, c.Query, http.DefaultClient), nil

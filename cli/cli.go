@@ -2,72 +2,81 @@ package cli
 
 import (
 	"context"
-	"deni1688/gie/internal/issues"
+	"deni1688/gie/core"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"os"
+	"path"
 	"strings"
 )
 
 type Cli struct {
+	exclude  []string
 	dry      bool
 	repoName string
-	service  issues.Service
+	service  core.Service
 	ctx      context.Context
 }
 
-func New(service issues.Service, dry bool, repoName string) *Cli {
-	return &Cli{dry, repoName, service, context.Background()}
+func New(service core.Service, dry bool, repoName string, exclude []string) *Cli {
+	return &Cli{exclude, dry, repoName, service, context.Background()}
 }
 
-func (r Cli) Execute(path string) error {
+func (r Cli) Execute(pth string) error {
 	fmt.Println("Searching...")
 
-	allIssues := make([]issues.Issue, 0)
-	issueCh := make(chan issues.Issue)
+	allIssues := make([]core.Issue, 0)
+	issueCh := make(chan core.Issue, 100)
 
-	doneCh := make(chan struct{})
-	defer close(doneCh)
-
-	var err error
-	go func() {
+	var g errgroup.Group
+	g.Go(func() error {
 		defer close(issueCh)
-		if err = r.handlePath(path, &issueCh); err != nil {
-			return
-		}
-	}()
+		return r.handlePath(pth, &issueCh)
+	})
 
-	go func() {
+	g.Go(func() error {
 		for issue := range issueCh {
 			allIssues = append(allIssues, issue)
 		}
+		return nil
+	})
 
-		doneCh <- struct{}{}
-	}()
-	<-doneCh
+	if err := g.Wait(); err != nil {
+		return err
+	}
 
 	fmt.Printf("Found %d issue(s)\n", len(allIssues))
+
+	if r.dry {
+		return nil
+	}
 
 	return r.service.Notify(&allIssues)
 }
 
-// Issue: Ignore private files and dirs (e.g. .git, .idea, etc) -> closes https://github.com/deni1688/gie/issues/39
-func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
-	inf, err := os.Stat(path)
+func (r Cli) handlePath(pth string, issueCh *chan core.Issue) error {
+	inf, err := os.Stat(pth)
 	if err != nil {
 		return err
 	}
 
+	base := path.Base(pth)
+	for _, p := range r.exclude {
+		if strings.Contains(base, p) {
+			return nil
+		}
+	}
+
 	if inf.IsDir() {
-		if err = r.handleDirPath(path, r.repoName, issueCh); err != nil {
+		if err = r.handleDirPath(pth, issueCh); err != nil {
 			return err
 		}
 
 		return nil
 	}
 
-	f, err := os.Open(path)
+	f, err := os.Open(pth)
 	if err != nil {
 		return err
 	}
@@ -82,7 +91,7 @@ func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 	}
 
 	content := string(b)
-	found, err := r.service.ExtractIssues(&content, &path)
+	found, err := r.service.ExtractIssues(&content, &pth)
 	if err != nil {
 		return err
 	}
@@ -98,7 +107,7 @@ func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 
 	for _, issue := range *found {
 		*issueCh <- issue
-		fmt.Printf("Found issue=[%s] in path=[%s]\n", issue.Title, path)
+		fmt.Printf("Found issue=[%s] in pth=[%s]\n", issue.Title, pth)
 		if r.dry {
 			continue
 		}
@@ -117,19 +126,18 @@ func (r Cli) handlePath(path string, issueCh *chan issues.Issue) error {
 		return nil
 	}
 
-	return os.WriteFile(path, []byte(content), 0600)
+	return os.WriteFile(pth, []byte(content), 0600)
 }
 
-func (r Cli) handleDirPath(path, repoName string, issueCh *chan issues.Issue) error {
+func (r Cli) handleDirPath(pth string, issueCh *chan core.Issue) error {
 	var err error
 	var files []os.DirEntry
 
-	files, err = os.ReadDir(path)
+	files, err = os.ReadDir(pth)
 	if err != nil {
 		return err
 	}
 
-	// Issue: Find the best way to do recursive concurrency with errgroup -> closes https://github.com/deni1688/gie/issues/40
 	g, ctx := errgroup.WithContext(r.ctx)
 	g.SetLimit(15)
 
@@ -141,7 +149,7 @@ func (r Cli) handleDirPath(path, repoName string, issueCh *chan issues.Issue) er
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				return r.handlePath(path+"/"+dirEntry.Name(), issueCh)
+				return r.handlePath(pth+"/"+dirEntry.Name(), issueCh)
 			}
 		})
 	}

@@ -3,7 +3,7 @@ package webhook
 import (
 	"bytes"
 	"deni1688/gie/common"
-	"deni1688/gie/internal/issues"
+	"deni1688/gie/core"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,11 +14,11 @@ type webhookNotifier struct {
 	client   common.HttpClient
 }
 
-func New(webhooks []string, client common.HttpClient) issues.Notifier {
+func New(webhooks []string, client common.HttpClient) core.Notifier {
 	return &webhookNotifier{webhooks, client}
 }
 
-func (r webhookNotifier) Notify(issues *[]issues.Issue) error {
+func (r webhookNotifier) Notify(issues *[]core.Issue) error {
 	if len(r.webhooks) < 1 || r.webhooks == nil {
 		return nil
 	}
