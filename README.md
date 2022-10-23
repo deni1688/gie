@@ -42,5 +42,15 @@ gie -path .
     }
 ```
 
+#### Post issue creation
+After the `gie` command is ran it will also check if any webhooks are configured and send all extracted issues to the
+configured endpoints. 
+
+### Roadmap
+
+1. Create a GUI version that can be triggered via a flag which will allow selecting which issues should be created and providing better descriptions.
+
+
+
 
 
