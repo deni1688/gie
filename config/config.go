@@ -54,6 +54,8 @@ func (r *Config) Setup() error {
 
 	fmt.Printf("Creating config file at %s. Navigate to the file and fill in the details.\n", configPath)
 
+	r.Exclude = append(r.Exclude, []string{".git", ".idea", ".vscode"}...)
+
 	if err = json.NewEncoder(file).Encode(r); err != nil {
 		return err
 	}
