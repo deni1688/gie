@@ -44,13 +44,30 @@ gie -path .
 
 #### Post issue creation
 After the `gie` command is ran it will also check if any webhooks are configured and send all extracted issues to the
-configured endpoints. 
+configured endpoints.
+
+
+#### Configuration
+
+The default config file is sourced from your $HOME/.config/gie.json. You can generate this file by running
+`gie -setup`. This will create the config json with the following options:
+
+```json
+{
+    "host": "String<GITHUB|GITLAB>",
+    "token": "String<YOUR_AUTH_TOKEN>",
+    "prfix": "String<PREFIX e.g. // TODO>",
+    "query": "String<QUERY_FOR_YOUR_REPOS>",
+    "webhooks": "List<YOUR_WEBHOOKS_URLS>",
+    "exclude": "List<DIRS_FILE_TO_EXCLUDE>"
+}
+```
+
+You can also override the config on each run by providing a path to another json file using the -config flag. 
 
 ### Roadmap
 
 1. Create a GUI version that can be triggered via a flag which will allow selecting which issues should be created and providing better descriptions.
-
-
 
 
 
