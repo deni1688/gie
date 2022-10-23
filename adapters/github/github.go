@@ -2,7 +2,7 @@ package github
 
 import (
 	"bytes"
-	"deni1688/gie/common"
+	"deni1688/gie/adapters/shared"
 	"deni1688/gie/core"
 	"encoding/json"
 	"fmt"
@@ -14,11 +14,11 @@ type github struct {
 	token  string
 	host   string
 	query  string
-	client common.HttpClient
+	client shared.HttpClient
 	repos  *[]core.Repo
 }
 
-func New(token string, host string, query string, client common.HttpClient) core.GitProvider {
+func New(token string, host string, query string, client shared.HttpClient) core.GitProvider {
 	return &github{token, host, query, client, nil}
 }
 

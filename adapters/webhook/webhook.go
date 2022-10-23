@@ -2,7 +2,7 @@ package webhook
 
 import (
 	"bytes"
-	"deni1688/gie/common"
+	"deni1688/gie/adapters/shared"
 	"deni1688/gie/core"
 	"encoding/json"
 	"fmt"
@@ -11,10 +11,10 @@ import (
 
 type webhookNotifier struct {
 	webhooks []string
-	client   common.HttpClient
+	client   shared.HttpClient
 }
 
-func New(webhooks []string, client common.HttpClient) core.Notifier {
+func New(webhooks []string, client shared.HttpClient) core.Notifier {
 	return &webhookNotifier{webhooks, client}
 }
 

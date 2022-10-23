@@ -2,7 +2,7 @@ package gitlab
 
 import (
 	"bytes"
-	"deni1688/gie/common"
+	"deni1688/gie/adapters/shared"
 	"deni1688/gie/core"
 	"encoding/json"
 	"fmt"
@@ -14,7 +14,7 @@ type gitlab struct {
 	token  string
 	host   string
 	query  string
-	client common.HttpClient
+	client shared.HttpClient
 	repos  *[]core.Repo
 }
 
@@ -25,7 +25,7 @@ type gitlabIssue struct {
 	WebUrl string `json:"web_url"`
 }
 
-func New(token, host, query string, client common.HttpClient) core.GitProvider {
+func New(token, host, query string, client shared.HttpClient) core.GitProvider {
 	return &gitlab{token, host, query, client, nil}
 }
 
