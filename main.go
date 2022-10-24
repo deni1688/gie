@@ -1,12 +1,12 @@
 package main
 
 import (
-	"deni1688/gie/cli"
-	"deni1688/gie/config"
-	"deni1688/gie/core"
 	"deni1688/gie/adapters/github"
 	"deni1688/gie/adapters/gitlab"
 	"deni1688/gie/adapters/webhook"
+	"deni1688/gie/cli"
+	"deni1688/gie/config"
+	"deni1688/gie/core"
 	"flag"
 	"fmt"
 	"net/http"
@@ -21,10 +21,21 @@ const (
 	GITLAB = "gitlab"
 )
 
+var defaultPath = "./issues.txt"
+
+func init() {
+	cmd, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		fmt.Println("Error getting current directory:", err)
+		return
+	}
+	defaultPath = strings.Trim(string(cmd), "\n ")
+}
+
 func main() {
 	setup := flag.Bool("setup", false, "creates a config file")
 	configPath := flag.String("config", "", "custom config file path")
-	path := flag.String("path", "./issues.txt", "file path to parse issues from")
+	path := flag.String("path", defaultPath, "file path to parse issues from")
 	prefix := flag.String("prefix", "", "prefix to override config")
 	dry := flag.Bool("dry", false, "dry run")
 	flag.Parse()

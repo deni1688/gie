@@ -2,7 +2,7 @@
 # gie (git issue extractor)
 cli tool to create multiple issues for a git provider
 
-### Purpose 
+### Overview 
 This tool should make it simple to extract issues to a git hosting service like GitHub or GitLab from your code base.
 Putting extraction one command away will hopefully encourage developers to submit more commits with targeted issues attached. As a result, 
 tacking different types of changes should become more transparent and measureable. 
@@ -18,8 +18,8 @@ appended to the commented line. Each issue will also have a reference to the fil
 ##### Before
 
 ```go
-    // Issue: Make it possible to do XYZ in someFunctionThatShouldBerefactored
-    func someFunctionThatShouldBerefactored() {
+    // Issue: Make it possible to do XYZ in refactorMe 
+    func refactorMe() {
         // ...        
     }
 ```
@@ -32,8 +32,8 @@ gie -path .
 
 ##### After
 ```go
-    // Issue: Make it possible to do XYZ in someFunctionThatShouldBerefactored -> closes https://github.com/owner/project/issues/12
-    func someFunctionThatShouldBerefactored() {
+    // Issue: Make it possible to do XYZ refactorMe refactorMe -> closes https://github.com/owner/project/issues/12
+    func refactorMe() {
         // ...        
     }
 ```
@@ -45,8 +45,8 @@ configured endpoints.
 
 #### Configuration
 
-The default config file is sourced from your $HOME/.config/gie.json. You can generate this file by running
-`gie -setup`. This will create the config json with the following options:
+The default config file is sourced from your $HOME/.config/gie.json. You can generate this file by running `gie -setup`.
+This will create the config json with the following options:
 
 ```json
 {
