@@ -29,6 +29,14 @@ func New(token, host, query string, client shared.HttpClient) core.GitProvider {
 	return &gitlab{token, host, query, client, nil}
 }
 
+type Repo struct {
+	ID    int    `json:"id"`
+	Name  string `json:"path"`
+	Owner struct {
+		Name string `json:"name"`
+	}
+}
+
 func (r gitlab) GetRepos() (*[]core.Repo, error) {
 	if r.repos != nil {
 		return r.repos, nil
@@ -46,12 +54,17 @@ func (r gitlab) GetRepos() (*[]core.Repo, error) {
 	}
 	defer resp.Body.Close()
 
-	var repos []core.Repo
+	var repos []Repo
 	if err = json.NewDecoder(resp.Body).Decode(&repos); err != nil {
 		return nil, err
 	}
 
-	return &repos, nil
+	var coreRepos []core.Repo
+	for _, repo := range repos {
+		coreRepos = append(coreRepos, core.Repo{ID: repo.ID, Name: repo.Name, Owner: repo.Owner.Name})
+	}
+
+	return &coreRepos, nil
 }
 
 func (r gitlab) CreateIssue(repo *core.Repo, issue *core.Issue) error {
