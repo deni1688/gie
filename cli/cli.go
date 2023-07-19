@@ -107,7 +107,7 @@ func (r Cli) handlePath(pth string, issueCh *chan core.Issue) error {
 
 	for _, issue := range *found {
 		*issueCh <- issue
-		fmt.Printf("Found issue=[%s] in pth=[%s]\n", issue.Title, pth)
+		fmt.Printf("Found issue=[%s] in path=[%s]\n", issue.Title, pth)
 		if r.dry {
 			continue
 		}
